@@ -86,5 +86,5 @@ function parserKtrk(language) {
                 })
             }
         });
-    }, 900000);
+    }, 14400000);
 }
