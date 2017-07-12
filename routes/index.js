@@ -9,6 +9,7 @@ var xpath = require('xpath'),
 var client = require('redis').createClient('redis://h:pd4c104be5ed6b00951dd5c0f8c7461f66790fc55dde2d58612b10a98bb2e5a20@ec2-34-230-117-175.compute-1.amazonaws.com:28789');
 router.get('/', function(req, res, next) {
     setInterval(function () {
+        console.log('hi');
         var data = {
             url: 'https://api.namba1.co/users/auth',
             method: 'POST',
@@ -67,7 +68,8 @@ router.get('/', function(req, res, next) {
                 })
             }
         });
-    }, 14400000)
+    }, 1000)
 });
+//14400000
 
 module.exports = router;
