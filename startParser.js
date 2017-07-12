@@ -58,11 +58,9 @@ setInterval(function () {
                                 })
                             }else {
                                 console.log('not check');
-                                res.end()
                             }
                         })
                     }
-                    res.end();
                     console.log('response end')
                 });
             })
