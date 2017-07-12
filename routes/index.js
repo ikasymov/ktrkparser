@@ -2,7 +2,7 @@ var express = require('express');
 var router = express.Router();
 var request = require('request');
 var ch = require('cheerio');
-
+var method = require('../startParser');
 var xpath = require('xpath'),
     dom = require('xmldom').DOMParser;
 
@@ -29,12 +29,13 @@ function parserKtrk(language) {
         };
         request(data, function (error, req, body) {
             var check = true;
-            var token = body.data.token;
+            var sendToken = body.data.token;
             whileLoop();
             function whileLoop() {
                 client.get('last_news_' + language, function (error, value) {
+                    var baseUrl = 'http://www.ktrk.kg/post/' + value +'/' + language;
                     var data = {
-                        url: 'http://www.ktrk.kg/post/' + value +'/' + language,
+                        url: baseUrl,
                         method: 'GET'
                     };
                     request(data, function (error, requ, body) {
@@ -46,28 +47,36 @@ function parserKtrk(language) {
                             var title = xpath.select('//*[@id="page-content-wrapper"]/div[5]/div/section/div/div[1]/div[1]/div[2]/div[1]/div[3]', doc).toString();
                             var $ = ch.load(title, {
                             });
-                            var text = $('p').replaceWith('\r\n').text().replace(/(?:&nbsp;|<br>)|(?:&ndash;|<br>)|(?:&raquo;|<br>)|(?:&laquo;|<br>)|(?:&ldquo;|<br>)|(?:&rdquo;|<br>)/g, '');
-                            var data = {
-                                url: 'https://api.namba1.co/groups/1134/post',
-                                method: 'POST',
-                                body: {
-                                    content: text,
-                                    comment_enabled: 1
-                                },
-                                headers: {
-                                    'X-Namba-Auth-Token': token
-                                },
-                                json: true
-                            };
-                            request(data, function (error, req, body) {
-                                if(check){
-                                    client.set('last_news_' + language, parseInt(value) + 1, function (error, value) {
-                                        whileLoop();
-                                    })
-                                }else {
-                                    console.log('not check');
-                                }
-                            })
+                            var text = $('p').replaceWith('\r\n').text().replace(/(?:&nbsp;|<br>)|(?:&ndash;|<br>)|(?:&raquo;|<br>)|(?:&laquo;|<br>)|(?:&ldquo;|<br>)|(?:&rdquo;|<br>)|(?:&mdash;|<br>)/g, '');
+
+                            method.getImageToken(value, baseUrl, language, function (token) {
+                                var data = {
+                                    url: 'https://api.namba1.co/groups/1134/post',
+                                    method: 'POST',
+                                    body: {
+                                        content: text,
+                                        comment_enabled: 1,
+                                        attachments: [{
+                                            type: 'media/image',
+                                            content: token
+                                        }]
+                                    },
+                                    headers: {
+                                        'X-Namba-Auth-Token': sendToken
+                                    },
+                                    json: true
+                                };
+                                request(data, function (error, req, body) {
+                                    if(check){
+                                        client.set('last_news_' + language, parseInt(value) + 1, function (error, value) {
+                                            whileLoop();
+                                        })
+                                    }else {
+                                        console.log('not check');
+                                    }
+                                })
+                            });
+
                         }
                         console.log('response end')
                     });
