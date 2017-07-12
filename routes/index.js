@@ -48,10 +48,13 @@ function parserKtrk(language) {
                             var $ = ch.load(title, {
                             });
                             var text = $('p').replaceWith('\r\n').text().replace(/(?:&nbsp;|<br>)|(?:&ndash;|<br>)|(?:&raquo;|<br>)|(?:&laquo;|<br>)|(?:&ldquo;|<br>)|(?:&rdquo;|<br>)|(?:&mdash;|<br>)/g, '');
-
+                            var getGroup = {
+                                ru: 1136,
+                                kg: 1134
+                            };
                             method.getImageToken(value, baseUrl, language, function (token) {
                                 var data = {
-                                    url: 'https://api.namba1.co/groups/1134/post',
+                                    url: 'https://api.namba1.co/groups/' + getGroup[language] +'/post',
                                     method: 'POST',
                                     body: {
                                         content: text,
