@@ -32,7 +32,7 @@ function parserKtrk(language) {
             var token = body.data.token;
             whileLoop();
             function whileLoop() {
-                client.get('last_news', function (error, value) {
+                client.get('last_news_' + language, function (error, value) {
                     var data = {
                         url: 'http://www.ktrk.kg/post/' + value +'/' + language,
                         method: 'GET'
@@ -61,7 +61,7 @@ function parserKtrk(language) {
                             };
                             request(data, function (error, req, body) {
                                 if(check){
-                                    client.set('last_news', parseInt(value) + 1, function (error, value) {
+                                    client.set('last_news_' + language, parseInt(value) + 1, function (error, value) {
                                         whileLoop();
                                     })
                                 }else {
