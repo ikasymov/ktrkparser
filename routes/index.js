@@ -68,7 +68,7 @@ router.get('/', function(req, res, next) {
                 })
             }
         });
-    }, 14400000)
+    }, 15000)
 });
-
+//14400000
 module.exports = router;
