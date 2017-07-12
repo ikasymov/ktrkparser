@@ -38,7 +38,7 @@ router.get('/', function(req, res, next) {
                             var title = xpath.select('//*[@id="page-content-wrapper"]/div[5]/div/section/div/div[1]/div[1]/div[2]/div[1]/div[3]', doc).toString();
                             var $ = ch.load(title, {
                             });
-                            var text = $('p').replaceWith('\r\n').text().replace(/(?:&nbsp;|<br>)|(?:&ndash;|<br>)|(?:&raquo;|<br>)|(?:&laquo;|<br>)/g, '');
+                            var text = $('p').replaceWith('\r\n').text().replace(/(?:&nbsp;|<br>)|(?:&ndash;|<br>)|(?:&raquo;|<br>)|(?:&laquo;|<br>)|(?:&ldquo;|<br>)|(?:&rdquo;|<br>)/g, '');
                             var data = {
                                 url: 'https://api.namba1.co/groups/1134/post',
                                 method: 'POST',
