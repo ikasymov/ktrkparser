@@ -45,3 +45,5 @@ function startParserKg() {
 function startaParserRu(){
     index.ParserKtrk('ru')
 }
+startaParserRu();
+startParserKg();
