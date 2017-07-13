@@ -6,4 +6,4 @@ var client = require('redis').createClient('redis://h:pd4c104be5ed6b00951dd5c0f8
 client.get('kp_news', function (error, value) {
    console.log(value)
 });
-// client.set('last_news_ru', 14684);
+// client.set('', 14684);

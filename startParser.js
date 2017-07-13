@@ -111,7 +111,7 @@ function parserKtrk(language) {
 
                     }
                     console.log('response end');
-                    process.exit()
+                    // process.exit()
                 });
             })
         }

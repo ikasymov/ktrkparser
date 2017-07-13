@@ -10,7 +10,11 @@ var client = require('redis').createClient('redis://h:pd4c104be5ed6b00951dd5c0f8
 function changeCheckVariable(){
     check = !check
 }
-
+var last_values = 0;
+var last_news = 0;
+client.get('kp_news', function (error, value) {
+    last_news = value
+});
 function getAuthToken(callback){
         var data = {
             url: 'https://api.namba1.co/users/auth',
@@ -120,17 +124,17 @@ function baseLogic(callback) {
             var url = 'http://www.kp.kg/online/news/' + value + '/';
             getArticleTheme(url, function (theme) {
                 if(theme === 'error'){
-                    client.set('kp_news_second', parseInt(value) + 1);
-                    client.get('kp_news_second', function (error, last_value) {
-                       if(last_value - value === 5){
-                           changeCheckVariable();
-                           callback(check);
-                           return;
-                       }else{
-                           callback(true);
-                           return;
-                       }
-                    });
+                    last_values += 1;
+                    client.set('kp_news', parseInt(value) + 1);
+                    if(last_values === 5){
+                       client.set('kp_news', last_news);
+                       changeCheckVariable();
+                       callback(check);
+                       return;
+                   }else{
+                       callback(true);
+                       return;
+                   }
                 }else{
                     getArticleBody(url, function (text) {
                         getArticleImage(url, function (token) {
@@ -155,7 +159,7 @@ function baseLogic(callback) {
                             }
                             postArticle(data, function (statusCode) {
                                 console.log(statusCode);
-                                client.set('kp_news', parseInt(value) + 1, function (error, value) {
+                                client.set('kp_news', parseInt(value) + 2, function (error, value) {
                                     callback(check)
                                 });
                             })
