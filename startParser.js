@@ -70,7 +70,7 @@ function parserKtrk(language) {
                             if (getTitle(this).attr('class') === undefined){
                                 return getTitle(this).text()
                             }
-                        }).get().join(' ');
+                        }).get().join(' ') + '\r\n';
                         var bodyText = xpath.select('//*[@id="page-content-wrapper"]/div[5]/div/section/div/div[1]/div[1]/div[2]/div[1]/div[3]', doc).toString();
                         var $ = ch.load(bodyText);
                         $('p').slice(2).each(function (i, elem) {
