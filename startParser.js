@@ -110,7 +110,8 @@ function parserKtrk(language) {
                         });
 
                     }
-                    console.log('response end')
+                    console.log('response end');
+                    process.exit()
                 });
             })
         }
