@@ -59,7 +59,7 @@ function parserKtrk(language) {
                     method: 'GET'
                 };
                 request(data, function (error, requ, body) {
-                    if (requ.statusCode === 404){
+                    if (requ.statusCode === 404 || error){
                         check = false;
                         console.log('check false')
                     }else {
