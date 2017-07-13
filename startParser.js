@@ -5,9 +5,8 @@ var fs = require('fs');
 var superagent = require('superagent');
 var xpath = require('xpath'),
     dom = require('xmldom').DOMParser;
-var index = require('./routes/index');
 var client = require('redis').createClient('redis://h:pd4c104be5ed6b00951dd5c0f8c7461f66790fc55dde2d58612b10a98bb2e5a20@ec2-34-230-117-175.compute-1.amazonaws.com:28789');
-
+var convert_str = require('html-to-text');
 function getImageToken(id, url, language, callback) {
     var data = {
         url: url,
@@ -65,10 +64,19 @@ function parserKtrk(language) {
                         console.log('check false')
                     }else {
                         var doc = new dom().parseFromString(body);
-                        var title = xpath.select('//*[@id="page-content-wrapper"]/div[5]/div/section/div/div[1]/div[1]/div[2]/div[1]/div[3]', doc).toString();
-                        var $ = ch.load(title, {
+                        var titleHtml = xpath.select('//*[@id="page-content-wrapper"]/div[5]/div/section/div/div[1]/div[1]/div[2]/div[1]/p/span[1]', doc).toString();
+                        var getTitle = ch.load(titleHtml);
+                        var title = getTitle('span').map(function (i, elem) {
+                            if (getTitle(this).attr('class') === undefined){
+                                return getTitle(this).text()
+                            }
+                        }).get().join(' ');
+                        var bodyText = xpath.select('//*[@id="page-content-wrapper"]/div[5]/div/section/div/div[1]/div[1]/div[2]/div[1]/div[3]', doc).toString();
+                        var $ = ch.load(bodyText);
+                        $('p').slice(2).each(function (i, elem) {
+                            title += '\r\n' + $(this).text() + '\r\n';
                         });
-                        var text = $('p').replaceWith('\r\n').text().replace(/(?:&nbsp;|<br>)|(?:&ndash;|<br>)|(?:&raquo;|<br>)|(?:&laquo;|<br>)|(?:&ldquo;|<br>)|(?:&rdquo;|<br>)|(?:&mdash;|<br>)|(<([^>]+)>)/g, '');
+                        var text = title.replace(/(?:&nbsp;|<br>)|(?:&ndash;|<br>)|(?:&raquo;|<br>)|(?:&laquo;|<br>)|(?:&ldquo;|<br>)|(?:&rdquo;|<br>)|(?:&mdash;|<br>)|(<([^>]+)>)/g, '')
                         var getGroup = {
                             ru: 1136,
                             kg: 1134
@@ -109,7 +117,6 @@ function parserKtrk(language) {
     });
 
 };
-console.log('hi')
 parserKtrk('ru');
 parserKtrk('kg');
 
