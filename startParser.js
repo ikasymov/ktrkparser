@@ -7,6 +7,7 @@ var superagent = require('superagent');
 var request2 = require('http-get');
 var xpath = require('xpath'),
     dom = require('xmldom').DOMParser;
+var index = require('./routes/index');
 module.exports.getImageToken = function (id, url, language, callback) {
     var data = {
         url: url,
@@ -33,6 +34,14 @@ module.exports.getImageToken = function (id, url, language, callback) {
         });
 
     })
+};
+
+
+
+
+function startParserKg() {
+    index.ParserKtrk('kg')
 }
-
-
+function startaParserRu(){
+    index.ParserKtrk('ru')
+}
