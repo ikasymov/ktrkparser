@@ -120,39 +120,48 @@ function baseLogic(callback) {
             var url = 'http://www.kp.kg/online/news/' + value + '/';
             getArticleTheme(url, function (theme) {
                 if(theme === 'error'){
-                    changeCheckVariable();
-                    callback();
-                    return;
-                }
-                getArticleBody(url, function (text) {
-                    getArticleImage(url, function (token) {
-                        var data = {
-                            url: 'https://api.namba1.co/groups/' + 1137 +'/post',
-                            method: 'POST',
-                            body: {
-                                content: theme + '\r\n' + text,
-                                comment_enabled: 1,
-                            },
-                            headers: {
-                                'X-Namba-Auth-Token': sendToken
-                            },
-                            json: true
-                        };
-                        if (token === 'none'){
-                        }else{
-                           data.body['attachments'] = [{
-                               type: 'media/image',
-                               content: token
-                           }]
-                        }
-                        postArticle(data, function (statusCode) {
-                            console.log(statusCode);
-                            client.set('kp_news', parseInt(value) + 1, function (error, value) {
-                                callback(check)
-                            });
+                    client.set('kp_news_second', parseInt(value) + 1);
+                    client.get('kp_news_second', function (error, last_value) {
+                       if(last_value - value === 5){
+                           changeCheckVariable();
+                           callback(check);
+                           return;
+                       }else{
+                           callback(true);
+                           return;
+                       }
+                    });
+                }else{
+                    getArticleBody(url, function (text) {
+                        getArticleImage(url, function (token) {
+                            var data = {
+                                url: 'https://api.namba1.co/groups/' + 1137 +'/post',
+                                method: 'POST',
+                                body: {
+                                    content: theme + '\r\n' + text,
+                                    comment_enabled: 1,
+                                },
+                                headers: {
+                                    'X-Namba-Auth-Token': sendToken
+                                },
+                                json: true
+                            };
+                            if (token === 'none'){
+                            }else{
+                                data.body['attachments'] = [{
+                                    type: 'media/image',
+                                    content: token
+                                }]
+                            }
+                            postArticle(data, function (statusCode) {
+                                console.log(statusCode);
+                                client.set('kp_news', parseInt(value) + 1, function (error, value) {
+                                    callback(check)
+                                });
+                            })
                         })
-                    })
-                });
+                    });
+                }
             })
         });
 
