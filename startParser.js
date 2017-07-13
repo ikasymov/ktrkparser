@@ -109,8 +109,9 @@ function parserKtrk(language) {
     });
 
 };
- parserKtrk('ru');
- parserKtrk('kg');
+console.log('hi')
+parserKtrk('ru');
+parserKtrk('kg');
 
 
 
