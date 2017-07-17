@@ -87,6 +87,12 @@ function getArticleBody(doc, callback) {
     callback(text)
 }
 
+function getArticleTheme(doc, callback) {
+    var head = xpath.select('//*[@id="bodyArticleJS"]/header', doc).toString();
+    var $ = sh.load(head);
+    var title = $('h1').text();
+    callback(title)
+}
 
 function getArticleThemeTextImgToken(url, callback){
     var data = {
@@ -98,14 +104,13 @@ function getArticleThemeTextImgToken(url, callback){
             callback('error')
         }else {
             var doc = new dom().parseFromString(body);
-            var head = xpath.select('//*[@id="bodyArticleJS"]/header', doc).toString();
-            var $ = sh.load(head);
-            var title = $('h1').text();
-            getArticleBody(doc, function (text) {
-                getArticleImage(doc, function (token) {
-                    callback(title, text, token)
+            getArticleTheme(doc, function (theme) {
+                getArticleBody(doc, function (text) {
+                    getArticleImage(doc, function (token) {
+                        callback(theme, text, token)
+                    })
                 })
-            })
+            });
         }
     })
 }
@@ -163,7 +168,7 @@ function getUrl(){
                                     }
                                     if (checkList === afterLoopList.length){
                                         client.set('kp_news', check, function (error) {
-                                            console.log('STOOP')
+                                            console.log('STOP')
                                         })
                                     }
                                 })
