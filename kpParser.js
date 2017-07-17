@@ -31,7 +31,7 @@ function getAuthToken(callback){
 
 function postArticle(data, callback){
     var dataForSend = {
-        url: 'https://api.namba1.co/groups/' + 1142 +'/post',
+        url: 'https://api.namba1.co/groups/' + 1145 +'/post',
         method: 'POST',
         body: {
             content: data.title + '\r\n' + data.text,
@@ -42,8 +42,7 @@ function postArticle(data, callback){
         },
         json: true
     };
-    if (data.imgToken === 'none'){
-    }else{
+    if(data.imgToken !== 'none'){
         dataForSend.body['attachments'] = [{
             type: 'media/image',
             content: data.imgToken
