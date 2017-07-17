@@ -60,17 +60,23 @@ function parserKtrk(language) {
                 };
                 request(data, function (error, requ, body) {
                     if (requ.statusCode === 404 || error){
-                        check = false;
+                        client.get('check_404_' + language, function (error, counter) {
+                            client.set('check_404_' + language, parseInt(counter) + 1);
+                            client.set('last_news_' + language, parseInt(value) + 1);
+                            if (parseInt(counter) + 1 === 3){
+                                client.set('last_news_' + language, parseInt(value) - 2);
+                                client.set('check_404_' + language, 0);
+                                check = false
+                            }else{
+                                whileLoop();
+                            }
+                        });
                         console.log('check false')
                     }else {
                         var doc = new dom().parseFromString(body);
-                        var titleHtml = xpath.select('//*[@id="page-content-wrapper"]/div[5]/div/section/div/div[1]/div[1]/div[2]/div[1]/p/span[1]', doc).toString();
+                        var titleHtml = xpath.select('/html/head/title', doc).toString();
                         var getTitle = ch.load(titleHtml);
-                        var title = getTitle('span').map(function (i, elem) {
-                            if (getTitle(this).attr('class') === undefined){
-                                return getTitle(this).text()
-                            }
-                        }).get().join(' ') + '\r\n';
+                        var title = getTitle('title').text();
                         var bodyText = xpath.select('//*[@id="page-content-wrapper"]/div[5]/div/section/div/div[1]/div[1]/div[2]/div[1]/div[3]', doc).toString();
                         var $ = ch.load(bodyText);
                         $('p').slice(2).each(function (i, elem) {
