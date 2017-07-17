@@ -6,7 +6,6 @@ var superagent = require('superagent');
 var xpath = require('xpath'),
     dom = require('xmldom').DOMParser;
 var client = require('redis').createClient('redis://h:pd4c104be5ed6b00951dd5c0f8c7461f66790fc55dde2d58612b10a98bb2e5a20@ec2-34-230-117-175.compute-1.amazonaws.com:28789');
-var convert_str = require('html-to-text');
 function getImageToken(id, url, language, callback) {
     var data = {
         url: url,
@@ -42,8 +41,8 @@ function parserKtrk(language) {
         url: 'https://api.namba1.co/users/auth',
         method: 'POST',
         body: {
-            'phone': '996703384504',
-            'password': '0779153478i'
+            'phone': '996121121121',
+            'password': 'password112'
         },
         json: true
     };
@@ -84,8 +83,8 @@ function parserKtrk(language) {
                         });
                         var text = title.replace(/(?:&nbsp;|<br>)|(?:&ndash;|<br>)|(?:&raquo;|<br>)|(?:&laquo;|<br>)|(?:&ldquo;|<br>)|(?:&rdquo;|<br>)|(?:&mdash;|<br>)|(<([^>]+)>)/g, '')
                         var getGroup = {
-                            ru: 1136,
-                            kg: 1134
+                            ru: 1144,
+                            kg: 1143
                         };
                         getImageToken(value, baseUrl, language, function (token) {
                             var data = {
