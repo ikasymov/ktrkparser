@@ -11,8 +11,8 @@ function getAuthToken(callback){
             url: 'https://api.namba1.co/users/auth',
             method: 'POST',
             body: {
-                'phone': '996703384504',
-                'password': '0779153478i'
+                'phone': '996121121121',
+                'password': 'password112'
             },
             json: true
         };
