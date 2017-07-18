@@ -3,6 +3,7 @@ var request = require('request');
 var ch = require('cheerio');
 var fs = require('fs');
 var superagent = require('superagent');
+var methods = require('./methods');
 var xpath = require('xpath'),
     dom = require('xmldom').DOMParser;
 var client = require('redis').createClient('redis://h:pd4c104be5ed6b00951dd5c0f8c7461f66790fc55dde2d58612b10a98bb2e5a20@ec2-34-230-117-175.compute-1.amazonaws.com:28789');
@@ -20,19 +21,11 @@ function getImageToken(id, url, language, callback) {
         var $ = ch.load(title, {
         });
         var imagelink = $('img')[0].attribs.src;
-        request(imagelink).pipe(fs.createWriteStream('./' + id + language + '.jpg')).on('finish', function (error, req) {
-            if (error){
-                console.log(error)
-            }
-            // console.log(page)
-            superagent.post('https://files.namba1.co').attach('file', './' + id + language + '.jpg').end(function(err, req) {
-                fs.unlink('./' + id + language + '.jpg', function (error, value) {});
-                callback(req.body.file)
-            });
+        methods.saveImageAndReturnToken(imagelink, function (token) {
+            callback(token)
         });
-
     })
-};
+}
 
 
 function parserKtrk(language) {
