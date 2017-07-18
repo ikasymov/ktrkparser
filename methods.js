@@ -1,3 +1,7 @@
+var request = require('request'),
+    superagent = require('superagent');
+    fs = require('fs');
+
 module.exports = {
   saveImageAndReturnToken: function (imgUrl, callback) {
       var value = Math.random();
