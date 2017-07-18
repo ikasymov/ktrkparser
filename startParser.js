@@ -16,7 +16,7 @@ function getImageToken(id, url, language, callback) {
             console.log(error)
         }
         var doc = new dom().parseFromString(body);
-        var title = xpath.select('//*[@id="post-thumb"]', doc).toString();
+        var title = xpath.select('//*[@id="page-content-wrapper"]/div[2]/div[2]/div/div[1]/div[1]/div[2]/div/figure/div', doc).toString();
         var $ = ch.load(title, {
         });
         var imagelink = $('img')[0].attribs.src;
@@ -76,43 +76,51 @@ function parserKtrk(language) {
                         var titleHtml = xpath.select('/html/head/title', doc).toString();
                         var getTitle = ch.load(titleHtml);
                         var title = getTitle('title').text();
-                        var bodyText = xpath.select('//*[@id="page-content-wrapper"]/div[5]/div/section/div/div[1]/div[1]/div[2]/div[1]/div[3]', doc).toString();
-                        var $ = ch.load(bodyText);
-                        $('p').slice(2).each(function (i, elem) {
-                            title += '\r\n' + $(this).text() + '\r\n';
-                        });
-                        var text = title.replace(/(?:&nbsp;|<br>)|(?:&ndash;|<br>)|(?:&raquo;|<br>)|(?:&laquo;|<br>)|(?:&ldquo;|<br>)|(?:&rdquo;|<br>)|(?:&mdash;|<br>)|(<([^>]+)>)/g, '')
-                        var getGroup = {
-                            ru: 1144,
-                            kg: 1143
-                        };
-                        getImageToken(value, baseUrl, language, function (token) {
-                            var data = {
-                                url: 'https://api.namba1.co/groups/' + getGroup[language] +'/post',
-                                method: 'POST',
-                                body: {
-                                    content: text,
-                                    comment_enabled: 1,
-                                    attachments: [{
-                                        type: 'media/image',
-                                        content: token
-                                    }]
-                                },
-                                headers: {
-                                    'X-Namba-Auth-Token': sendToken
-                                },
-                                json: true
+                        var bodyHtml = xpath.select('//*[@id="page-content-wrapper"]/div[2]/div[2]/div/div[1]/div[1]/div[2]/div/section', doc).toString();
+                        var $ = ch.load(bodyHtml);
+                        var bodyText = $('p').text();
+                        title += '\r\n' + bodyText;
+                        if(bodyText){
+                            var text = title.replace(/(?:&nbsp;|<br>)|(?:&ndash;|<br>)|(?:&raquo;|<br>)|(?:&laquo;|<br>)|(?:&ldquo;|<br>)|(?:&rdquo;|<br>)|(?:&mdash;|<br>)|(?:&nbs;|<br>)|(<([^>]+)>)/g, '');
+                            var getGroup = {
+                                ru: 1144,
+                                kg: 1143
                             };
-                            request(data, function (error, req, body) {
-                                if(check){
-                                    client.set('last_news_' + language, parseInt(value) + 1, function (error, value) {
-                                        whileLoop();
-                                    })
-                                }else {
-                                    console.log('not check');
-                                }
-                            })
-                        });
+                            getImageToken(value, baseUrl, language, function (token) {
+                                var data = {
+                                    url: 'https://api.namba1.co/groups/' + getGroup[language] +'/post',
+                                    method: 'POST',
+                                    body: {
+                                        content: text,
+                                        comment_enabled: 1,
+                                        attachments: [{
+                                            type: 'media/image',
+                                            content: token
+                                        }]
+                                    },
+                                    headers: {
+                                        'X-Namba-Auth-Token': sendToken
+                                    },
+                                    json: true
+                                };
+                                request(data, function (error, req, body) {
+                                    if(check){
+                                        client.set('last_news_' + language, parseInt(value) + 1, function (error, value) {
+                                            whileLoop();
+                                        })
+                                    }else {
+                                        console.log('not check');
+                                    }
+                                })
+                            });
+                        }else{
+                            if(check){
+                                client.set('last_news_' + language, parseInt(value) + 1, function (error) {
+                                    whileLoop()
+                                })
+                            }
+                        }
+
 
                     }
                     console.log('response end');
