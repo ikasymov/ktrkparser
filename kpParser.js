@@ -136,6 +136,15 @@ function baseLogic(id, sendToken, callback) {
         });
 }
 
+function getListOfIds(doc, callback){
+    var leftsiteBar = xpath.select('//*[@id="newsRegionJS"]', doc).toString();
+    var $ = sh.load(leftsiteBar);
+    var ids = $('div').children('article').map(function(i, elem){
+        return [$(this).attr('data-news-id')]
+    }).get().reverse();
+    callback(ids);
+}
+
 function getUrl(){
     var data = {
         url: 'http://www.kp.kg/',
@@ -143,39 +152,36 @@ function getUrl(){
     };
     request(data, function (error, req, body) {
         var doc = new dom().parseFromString(body);
-        var leftsiteBar = xpath.select('//*[@id="newsRegionJS"]', doc).toString();
-        var $ = sh.load(leftsiteBar);
-        var ids = $('div').children('article').map(function(i, elem){
-            return [$(this).attr('data-news-id')]
-        }).get().reverse();
-        var afterLoopList = [];
-        var counter = 0;
-        client.get('kp_news', function (error, value) {
-            getAuthToken(function (sendToken) {
-                ids.forEach(function (key) {
-                    counter ++;
-                    if (value < key &&  value !== key){
-                        baseLogic(key, sendToken, function (statusCode) {
-                            afterLoopList.push(key);
-                            if (counter === ids.length){
-                                var check = afterLoopList[0];
-                                var checkList = 0;
-                                afterLoopList.forEach(function(key){
-                                    checkList++;
-                                    if (key > check){
-                                        check = key
-                                    }
-                                    if (checkList === afterLoopList.length){
-                                        client.set('kp_news', check, function (error) {
-                                            console.log('STOP')
-                                        })
-                                    }
-                                })
-                            }
-                        });
-                    }else{
-                        console.log('Not Page')
-                    }
+        getListOfIds(doc, function (ids) {
+            var afterLoopList = [];
+            var counter = 0;
+            client.get('kp_news', function (error, value) {
+                getAuthToken(function (sendToken) {
+                    ids.forEach(function (key) {
+                        counter ++;
+                        if (value < key &&  value !== key){
+                            baseLogic(key, sendToken, function (statusCode) {
+                                afterLoopList.push(key);
+                                if (counter === ids.length){
+                                    var check = afterLoopList[0];
+                                    var checkList = 0;
+                                    afterLoopList.forEach(function(key){
+                                        checkList++;
+                                        if (key > check){
+                                            check = key
+                                        }
+                                        if (checkList === afterLoopList.length){
+                                            client.set('kp_news', check, function (error) {
+                                                console.log('STOP')
+                                            })
+                                        }
+                                    })
+                                }
+                            });
+                        }else{
+                            console.log('Not Page')
+                        }
+                    });
                 });
             });
         });
