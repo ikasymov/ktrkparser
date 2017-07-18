@@ -30,18 +30,9 @@ function getImageToken(id, url, language, callback) {
 
 function parserKtrk(language) {
     console.log('start');
-    var data = {
-        url: 'https://api.namba1.co/users/auth',
-        method: 'POST',
-        body: {
-            'phone': '996121121121',
-            'password': 'password112'
-        },
-        json: true
-    };
-    request(data, function (error, req, body) {
+    methods.getAuthToken(function (token) {
         var check = true;
-        var sendToken = body.data.token;
+        var sendToken = token;
         whileLoop();
         function whileLoop() {
             client.get('last_news_' + language, function (error, value) {
@@ -122,6 +113,7 @@ function parserKtrk(language) {
             })
         }
     });
+
 
 };
 parserKtrk('ru');

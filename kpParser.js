@@ -7,27 +7,6 @@ var superagent = require('superagent');
 var methods = require('./methods');
 var client = require('redis').createClient('redis://h:pd4c104be5ed6b00951dd5c0f8c7461f66790fc55dde2d58612b10a98bb2e5a20@ec2-34-230-117-175.compute-1.amazonaws.com:28789');
 
-function getAuthToken(callback){
-        var data = {
-            url: 'https://api.namba1.co/users/auth',
-            method: 'POST',
-            body: {
-                'phone': '996121121121',
-                'password': 'password112'
-            },
-            json: true
-        };
-        request(data, function (error, req, body) {
-            if (error || req.statusCode === 404){
-                console.log('Error get auth token');
-                callback('error')
-            }else{
-                callback(body.data.token)
-            }
-        })
-}
-
-
 
 
 function postArticle(data, callback){
@@ -163,7 +142,7 @@ function getUrl(){
             var afterLoopList = [];
             var counter = 0;
             client.get('kp_news', function (error, value) {
-                getAuthToken(function (sendToken) {
+                methods.getAuthToken(function (sendToken) {
                     ids.forEach(function (key) {
                         counter ++;
                         if (value < key &&  value !== key){
