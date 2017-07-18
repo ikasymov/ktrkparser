@@ -27,6 +27,30 @@ function getImageToken(id, url, language, callback) {
     })
 }
 
+function getArticleBody(doc, callback){
+    var bodyHtml = xpath.select('//*[@id="page-content-wrapper"]/div[2]/div[2]/div/div[1]/div[1]/div[2]/div/section', doc).toString();
+    var $ = ch.load(bodyHtml);
+
+    // var text = $('section').contents().map(function (p1, p2, p3) {
+    //     if ($(this).attr('class') !== 'pull-right') {
+    //         return $(this).text()
+    //     }
+    // }).get().toString();
+    var text = '';
+    $('section').children().each(function (i, elem) {
+        if ($(this).attr('class') !== 'pull-right') {
+            text += $(this).text() + '\r\n\r\n'
+        }
+    });
+    callback(text)
+}
+
+function getArticleTitle(doc, callback){
+    var titleHtml = xpath.select('/html/head/title', doc).toString();
+    var getTitle = ch.load(titleHtml);
+    callback(getTitle('title').text())
+}
+
 
 function parserKtrk(language) {
     console.log('start');
@@ -57,74 +81,53 @@ function parserKtrk(language) {
                         console.log('check false')
                     }else {
                         var doc = new dom().parseFromString(body);
-                        var titleHtml = xpath.select('/html/head/title', doc).toString();
-                        var getTitle = ch.load(titleHtml);
-                        var title = getTitle('title').text();
-                        var bodyHtml = xpath.select('//*[@id="page-content-wrapper"]/div[2]/div[2]/div/div[1]/div[1]/div[2]/div/section', doc).toString();
-                        var $ = ch.load(bodyHtml);
-
-                        var text = $('section').contents().map(function (p1, p2, p3) {
-                            if ($(this).attr('class') !== 'pull-right') {
-                                return $(this).text()
-                            }
-                        }).get().toString();
-
-                        function cleanArray(actual) {
-                            var newArray = new Array();
-                            for (var i = 0; i < actual.length; i++) {
-                                var current = actual[i];
-                                if (current && current !== '\n' && current !== ',' && current !== ',\n\n' && current !== ',\n') {
-                                    newArray.push(actual[i]);
-                                }
-                            }
-                            return newArray;
-                        }
-
-                        var splitTile = text.split(' ');
-                        var checkTitle = title.split(' ');
-                        var bodyText = cleanArray(splitTile).join(' ').replace(/[, ]+/g, ' ').replace(methods.regex, '');
-                        if (checkTitle.length > 3) {
-                            title += '\r\n' + bodyText;
-                            var getGroup = {
-                                ru: 1144,
-                                kg: 1143
-                            };
-                            getImageToken(value, baseUrl, language, function (token) {
-                                var data = {
-                                    url: 'https://api.namba1.co/groups/' + getGroup[language] + '/post',
-                                    method: 'POST',
-                                    body: {
-                                        content: title,
-                                        comment_enabled: 1,
-                                        attachments: [{
-                                            type: 'media/image',
-                                            content: token
-                                        }]
-                                    },
-                                    headers: {
-                                        'X-Namba-Auth-Token': sendToken
-                                    },
-                                    json: true
-                                };
-                                request(data, function (error, req, body) {
-                                    if (check) {
-                                        client.set('last_news_' + language, parseInt(value) + 1, function (error, value) {
-                                            whileLoop();
+                        getArticleTitle(doc, function(title){
+                            getArticleBody(doc, function (text) {
+                                var checkTitle = title.split(' ');
+                                if (checkTitle.length > 3) {
+                                    title +=  '\r\n\r\n' + text.replace(/\s+/, '').replace(methods.regex, '');
+                                    var getGroup = {
+                                        ru: 1144,
+                                        kg: 1143
+                                    };
+                                    getImageToken(value, baseUrl, language, function (token) {
+                                        var data = {
+                                            url: 'https://api.namba1.co/groups/' + getGroup[language] + '/post',
+                                            method: 'POST',
+                                            body: {
+                                                content: title,
+                                                comment_enabled: 1,
+                                                attachments: [{
+                                                    type: 'media/image',
+                                                    content: token
+                                                }]
+                                            },
+                                            headers: {
+                                                'X-Namba-Auth-Token': sendToken
+                                            },
+                                            json: true
+                                        };
+                                        request(data, function (error, req, body) {
+                                            if (check) {
+                                                client.set('last_news_' + language, parseInt(value) + 1, function (error, value) {
+                                                    whileLoop();
+                                                })
+                                            } else {
+                                                console.log('not check');
+                                            }
                                         })
-                                    } else {
-                                        console.log('not check');
+                                    });
+                                } else {
+                                    if (check) {
+                                        client.set('last_news_' + language, parseInt(value) + 1, function (error) {
+                                            whileLoop()
+                                        })
                                     }
-                                })
+
+
+                                }
                             });
-                        } else {
-                            if (check) {
-                                client.set('last_news_' + language, parseInt(value) + 1, function (error) {
-                                    whileLoop()
-                                })
-                            }
-
-
-                        }
+                        });
                         console.log('response end');
                         // process.exit()
                     }
