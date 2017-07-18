@@ -62,20 +62,39 @@ function parserKtrk(language) {
                         var title = getTitle('title').text();
                         var bodyHtml = xpath.select('//*[@id="page-content-wrapper"]/div[2]/div[2]/div/div[1]/div[1]/div[2]/div/section', doc).toString();
                         var $ = ch.load(bodyHtml);
-                        var bodyText = $('p').text();
-                        title += '\r\n' + bodyText;
-                        if(bodyText){
-                            var text = title.replace(/(?:&nbsp;|<br>)|(?:&ndash;|<br>)|(?:&raquo;|<br>)|(?:&laquo;|<br>)|(?:&ldquo;|<br>)|(?:&rdquo;|<br>)|(?:&mdash;|<br>)|(?:&nbs;|<br>)|(<([^>]+)>)/g, '');
+
+                        var text = $('section').contents().map(function (p1, p2, p3) {
+                            if ($(this).attr('class') !== 'pull-right') {
+                                return $(this).text()
+                            }
+                        }).get().toString();
+
+                        function cleanArray(actual) {
+                            var newArray = new Array();
+                            for (var i = 0; i < actual.length; i++) {
+                                var current = actual[i];
+                                if (current && current !== '\n' && current !== ',' && current !== ',\n\n' && current !== ',\n') {
+                                    newArray.push(actual[i]);
+                                }
+                            }
+                            return newArray;
+                        }
+
+                        var splitTile = text.split(' ');
+                        var checkTitle = title.split(' ');
+                        var bodyText = cleanArray(splitTile).join(' ').replace(/[, ]+/g, ' ').replace(methods.regex, '');
+                        if (checkTitle.length > 3) {
+                            title += '\r\n' + bodyText;
                             var getGroup = {
                                 ru: 1144,
                                 kg: 1143
                             };
                             getImageToken(value, baseUrl, language, function (token) {
                                 var data = {
-                                    url: 'https://api.namba1.co/groups/' + getGroup[language] +'/post',
+                                    url: 'https://api.namba1.co/groups/' + getGroup[language] + '/post',
                                     method: 'POST',
                                     body: {
-                                        content: text,
+                                        content: title,
                                         comment_enabled: 1,
                                         attachments: [{
                                             type: 'media/image',
@@ -88,27 +107,27 @@ function parserKtrk(language) {
                                     json: true
                                 };
                                 request(data, function (error, req, body) {
-                                    if(check){
+                                    if (check) {
                                         client.set('last_news_' + language, parseInt(value) + 1, function (error, value) {
                                             whileLoop();
                                         })
-                                    }else {
+                                    } else {
                                         console.log('not check');
                                     }
                                 })
                             });
-                        }else{
-                            if(check){
+                        } else {
+                            if (check) {
                                 client.set('last_news_' + language, parseInt(value) + 1, function (error) {
                                     whileLoop()
                                 })
                             }
+
+
                         }
-
-
+                        console.log('response end');
+                        // process.exit()
                     }
-                    console.log('response end');
-                    // process.exit()
                 });
             })
         }
