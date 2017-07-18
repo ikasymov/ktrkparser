@@ -10,18 +10,18 @@ var client = require('redis').createClient('redis://h:pd4c104be5ed6b00951dd5c0f8
 
 
 function postArticle(data, callback){
-    var dataForSend = {
-        url: 'https://api.namba1.co/groups/' + 1145 +'/post',
-        method: 'POST',
-        body: {
-            content: data.title + '\r\n' + data.text,
-            comment_enabled: 1
-        },
-        headers: {
-            'X-Namba-Auth-Token': data.sendToken
-        },
-        json: true
-    };
+        var dataForSend = {
+            url: 'https://api.namba1.co/groups/' + 1145 +'/post',
+            method: 'POST',
+            body: {
+                content: data.title + '\r\n' + data.text,
+                comment_enabled: 1
+            },
+            headers: {
+                'X-Namba-Auth-Token': data.sendToken
+            },
+            json: true
+        };
     if(data.imgToken !== 'none'){
         dataForSend.body['attachments'] = [{
             type: 'media/image',
