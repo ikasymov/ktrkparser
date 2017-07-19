@@ -3,6 +3,7 @@ var sh = require('cheerio');
 var xpath = require('xpath');
 var dom = require('xmldom').DOMParser;
 var methods = require('./methods');
+var htmlToText = require('html-to-text');
 var client = require('redis').createClient('redis://h:pd4c104be5ed6b00951dd5c0f8c7461f66790fc55dde2d58612b10a98bb2e5a20@ec2-34-230-117-175.compute-1.amazonaws.com:28789');
 
 function getArticleUrl(){
@@ -61,10 +62,16 @@ function getArticleBody(doc) {
         var text = '';
         $('div').each(function(i, elem){
             if($(this).attr('class') === 'article__text'){
-                text += $('p').text().replace(/\s+/, ' ')
+                text += htmlToText.fromString($(this).html(), {
+                    ignoreHref: true,
+                    ignoreImage: true,
+                    noLinkBrackets: true,
+                    singleNewLineParagraphs: true,
+                    wordwrap: 130
+                }).replace(methods.regex, '')
             }
         });
-        resolve(text.replace(methods.regex, ''))
+        resolve(text)
     })
 }
 function sendArticle(data){
@@ -113,6 +120,7 @@ function getArticleThemeBodyImageToken(url, sendToken) {
                         .then(function (body) {
                             getArticleImages(doc)
                                 .then(function (imgUrls) {
+
                                     methods.saveImageAndReturnToken(imgUrls, function (token) {
                                         var data = {
                                             title: theme,
@@ -155,7 +163,6 @@ function callFunction(){
                         client.set('rbc_last_news', sliceUrl[0], function (error) {
                             methods.getAuthToken(function (sendToken) {
                                 sliceUrl.forEach(function (key) {
-                                    console.log(key);
                                     getArticleThemeBodyImageToken(key, sendToken)
                                 });
                             })
