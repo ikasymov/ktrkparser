@@ -132,11 +132,10 @@ function getArticleThemeBodyImageToken(url, sendToken) {
                                             .then(function (statusCode) {
                                                 console.log(statusCode)
                                             })
-                                            .catch(console.log(error))
                                     })
                                 })
                                 .catch(function (error) {
-                                    console.log('error')
+                                    console.log('error');
                                     var data = {
                                         title: theme,
                                         text: body,
