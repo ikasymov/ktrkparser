@@ -137,14 +137,14 @@ function getArticleThemeBodyImageToken(url, sendToken) {
                                 })
                                 .catch(function (error) {
                                     console.log('error')
-                                });
                                     var data = {
                                         title: theme,
                                         text: body,
                                         sendToken: sendToken
                                     };
                                     sendArticle(data)
-                                })
+                                });
+                            })
                         })
                 })
         })
