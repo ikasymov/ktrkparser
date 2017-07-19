@@ -30,12 +30,6 @@ function getImageToken(id, url, language, callback) {
 function getArticleBody(doc, callback){
     var bodyHtml = xpath.select('//*[@id="page-content-wrapper"]/div[2]/div[2]/div/div[1]/div[1]/div[2]/div/section', doc).toString();
     var $ = ch.load(bodyHtml);
-
-    // var text = $('section').contents().map(function (p1, p2, p3) {
-    //     if ($(this).attr('class') !== 'pull-right') {
-    //         return $(this).text()
-    //     }
-    // }).get().toString();
     var text = '';
     $('section').children().each(function (i, elem) {
         if ($(this).attr('class') !== 'pull-right') {
