@@ -3,10 +3,9 @@ var sh = require('cheerio');
 var xpath = require('xpath');
 var dom = require('xmldom').DOMParser;
 var methods = require('./methods');
-var htmlToText = require('html-to-text');
 var client = require('redis').createClient('redis://h:pd4c104be5ed6b00951dd5c0f8c7461f66790fc55dde2d58612b10a98bb2e5a20@ec2-34-230-117-175.compute-1.amazonaws.com:28789');
 
-function getArticleUrl(){
+function getArticleUrls(){
     return new Promise(function (resolve, rejected) {
         var data = {
             url: 'http://www.rbc.ru/',
@@ -62,13 +61,9 @@ function getArticleBody(doc) {
         var text = '';
         $('div').each(function(i, elem){
             if($(this).attr('class') === 'article__text'){
-                text += htmlToText.fromString($(this).html(), {
-                    ignoreHref: true,
-                    ignoreImage: true,
-                    noLinkBrackets: true,
-                    singleNewLineParagraphs: true,
-                    wordwrap: 130
-                }).replace(methods.regex, '')
+                $('p').slice(0).each(function (i, element) {
+                    text += $(this).text().replace(methods.regex, '') + '\r\n\r\n'
+                });
             }
         });
         resolve(text)
@@ -103,72 +98,96 @@ function sendArticle(data){
     });
 }
 
-function getArticleThemeBodyImageToken(url, sendToken) {
-    return new Promise(function (resolve, rejected) {
+function getDocForParser(url){
+    return new Promise(function(resolve, rejected){
         var data = {
             url: url,
             method: 'GET'
         };
-        request(data, function (error, req, body) {
-            if(error){
-                rejected(error)
+        request(data, function(error, req, body){
+            if(!error){
+                resolve(new dom().parseFromString(body))
             }
-            var doc = new dom().parseFromString(body);
-            getArticleTheme(doc)
-                .then(function (theme) {
-                    getArticleBody(doc)
-                        .then(function (body) {
-                            getArticleImages(doc)
-                                .then(function (imgUrls) {
-
-                                    methods.saveImageAndReturnToken(imgUrls, function (token) {
-                                        var data = {
-                                            title: theme,
-                                            text: body,
-                                            img: token,
-                                            sendToken: sendToken
-                                        };
-                                        sendArticle(data)
-                                            .then(function (statusCode) {
-                                                console.log(statusCode)
-                                            })
-                                    })
-                                })
-                                .catch(function (error) {
-                                    console.log('error');
-                                    var data = {
-                                        title: theme,
-                                        text: body,
-                                        sendToken: sendToken
-                                    };
-                                    sendArticle(data)
-                                });
-                            })
-                        })
-                })
+            rejected(error);
         })
+    });
+}
+
+function getArticleThemeBodyImageToken(url, sendToken) {
+    return new Promise(function(resolve, rejected){
+        getDocForParser(url)
+            .then(function(doc){
+                getArticleTheme(doc)
+                    .then(function (theme) {
+                        getArticleBody(doc)
+                            .then(function (body) {
+                                var data = {
+                                    title: theme,
+                                    text: body,
+                                    sendToken: sendToken
+                                };
+                                getArticleImages(doc)
+                                    .then(function (imgUrls) {
+                                        methods.saveImageAndReturnToken(imgUrls, function (token) {
+                                            data['img'] = token;
+                                            resolve(data)
+                                        })
+                                    })
+                                    .catch(function (error) {
+                                        resolve(data)
+                                    });
+                            })
+                    })
+            });
+    });
+}
+
+Array.prototype.random = function(){
+  return this[Math.floor((Math.random()*this.length))];
+};
+
+function divideListAndReturnUrl(urls){
+    return new Promise(function(resolve, rejected){
+        client.get('rbc_last_news', function(error, value){
+            if(!error){
+                var before = urls.indexOf(value);
+                var divideList = urls.slice(0, before);
+                if(divideList.length > 0){
+                    resolve(divideList.random())
+                }
+                rejected()
+            }
+            rejected(error)
+        })
+    });
 }
 
 function callFunction(){
-    getArticleUrl()
+    getArticleUrls()
         .then(function (urls) {
-            client.get('rbc_last_news', function (error, value) {
-                if (!error){
-                    console.log(value);
-                    var beforeThis = urls.indexOf(value);
-                    var sliceUrl = urls.slice(0, beforeThis);
-                    console.log(sliceUrl.length);
-                    if(beforeThis !== 0){
-                        client.set('rbc_last_news', sliceUrl[0], function (error) {
-                            methods.getAuthToken(function (sendToken) {
-                                sliceUrl.forEach(function (key) {
-                                    getArticleThemeBodyImageToken(key, sendToken)
-                                });
-                            })
+            divideListAndReturnUrl(urls)
+                .then(function(randomUrl){
+                    client.set('rbc_last_news', randomUrl, function (error) {
+                        methods.getAuthToken(function (sendToken) {
+                            getArticleThemeBodyImageToken(randomUrl, sendToken)
+                                .then(function(data){
+                                    sendArticle(data)
+                                        .then(function (statusCode) {
+                                            console.log(statusCode)
+                                        });
+                                })
+                                .catch(function (data) {
+                                    sendArticle(data)
+                                        .then(function (statusCode) {
+                                            console.log(statusCode)
+                                        });
+                                })
                         });
-                    }
-                }
-            });
+                    });
+                })
+                .catch(function(error){
+                    console.log(error)
+                });
         })
         .catch(function (error) {
             console.log(error)
