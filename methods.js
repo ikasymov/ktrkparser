@@ -34,5 +34,5 @@ module.exports = {
             }
         })
     },
-    regex: /(?:&nbsp;|<br>)|(?:&ndash;|<br>)|(?:&raquo;|<br>)|(?:&laquo;|<br>)|(?:&ldquo;|<br>)|(?:&rdquo;|<br>)|(?:&mdash;|<br>)|(?:&nbs;|<br>)|(<([^>]+)>)/g
+    regex: /(?:&nbsp;|<br>)|(?:&ndash;|<br>)|(?:&raquo;|<br>)|(?:&laquo;|<br>)|(?:&ldquo;|<br>)|(?:&rdquo;|<br>)|(?:&mdash;|<br>)|(?:&nbs;|<br>)|(?:&rsquols;|<br>)|(<([^>]+)>)/g
 };
