@@ -26,11 +26,11 @@ function postArticle(data, callback){
         dataForSend.body['attachments'] = [{
             type: 'media/image',
             content: data.imgToken
-        }]
+        }];
     }
     request(dataForSend, function (error, req, body) {
-        callback(req.statusCode)
-    })
+        callback(req.statusCode);
+    });
 }
 
 function getArticleImage(doc, callback){
@@ -44,7 +44,7 @@ function getArticleImage(doc, callback){
     }
     if (imgUrl){
         methods.saveImageAndReturnToken(imgUrl, function (token) {
-            callback(token)
+            callback(token);
         });
     }
 }
@@ -54,16 +54,16 @@ function getArticleBody(doc, callback) {
     var $ = sh.load(articleBodyHtml);
     var text = '';
     $('p').slice(0).each(function (i, element) {
-        text += $(this).text()
+        text += $(this).text();
     });
-    callback(text)
+    callback(text);
 }
 
 function getArticleTheme(doc, callback) {
     var head = xpath.select('//*[@id="bodyArticleJS"]/header', doc).toString();
     var $ = sh.load(head);
     var title = $('h1').text();
-    callback(title)
+    callback(title);
 }
 
 function getArticleThemeTextImgToken(url, callback){
@@ -73,18 +73,18 @@ function getArticleThemeTextImgToken(url, callback){
     };
     request(data, function (error, req, body) {
         if (error || req.statusCode === 404){
-            callback('error')
+            callback('error');
         }else {
             var doc = new dom().parseFromString(body);
             getArticleTheme(doc, function (theme) {
                 getArticleBody(doc, function (text) {
                     getArticleImage(doc, function (token) {
-                        callback(theme, text, token)
-                    })
-                })
+                        callback(theme, text, token);
+                    });
+                });
             });
         }
-    })
+    });
 }
 
 function returnArticleForSend(url, sendToken, callback){
@@ -96,16 +96,16 @@ function returnArticleForSend(url, sendToken, callback){
             sendToken: sendToken
         };
         postArticle(data, function (statusCode) {
-            callback(statusCode)
-        })
-    })
+            callback(statusCode);
+        });
+    });
 
 }
 
 function baseLogic(id, sendToken, callback) {
         var url = 'http://www.kp.kg/online/news/' + id + '/';
         returnArticleForSend(url, sendToken, function (statusCode) {
-            callback(statusCode)
+            callback(statusCode);
         });
 }
 
@@ -113,7 +113,7 @@ function getListOfIds(doc, callback){
     var leftsiteBar = xpath.select('//*[@id="newsRegionJS"]', doc).toString();
     var $ = sh.load(leftsiteBar);
     var ids = $('div').children('article').map(function(i, elem){
-        return [$(this).attr('data-news-id')]
+        return [$(this).attr('data-news-id')];
     }).get().reverse();
     callback(ids);
 }
@@ -141,18 +141,18 @@ function getUrl(){
                                     afterLoopList.forEach(function(key){
                                         checkList++;
                                         if (key > check){
-                                            check = key
+                                            check = key;
                                         }
                                         if (checkList === afterLoopList.length){
                                             client.set('kp_news', check, function (error) {
-                                                console.log('STOP')
-                                            })
+                                                console.log('STOP');
+                                            });
                                         }
-                                    })
+                                    });
                                 }
                             });
                         }else{
-                            console.log('Not Page')
+                            console.log('Not Page');
                         }
                     });
                 });
