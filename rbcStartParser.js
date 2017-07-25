@@ -12,11 +12,6 @@ let client = require('redis').createClient('redis://h:pd4c104be5ed6b00951dd5c0f8
 let notPageError = new Error('Page not found');
 let notContentError = new Error('Content Not Found');
 
-Array.prototype.random = function(){
-    return this[Math.floor((Math.random()*this.length))];
-};
-
-
 function RBCParser(config){
     Parser.apply(this, arguments);
 }
@@ -56,7 +51,7 @@ RBCParser.prototype._generateRandom = async function () {
                 let before = urls.indexOf(value);
                 let divideList = urls.slice(0, before);
                 if(divideList.length > 0){
-                    resolve(divideList.random())
+                    resolve(methods.random(divideList))
                 }else{
                     rejected(Error('Not random List'));
                 }
