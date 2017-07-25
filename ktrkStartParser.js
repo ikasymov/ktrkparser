@@ -135,8 +135,8 @@ async function getParseUrls(){
         client.get(config.dataName2, function (error, check) {
             if(lastPost !== value && check === 'true'){
                 let randomValue = methods.random(range.range(parseInt(value), parseInt(lastPost) + 1));
-                let ruParser = new KtrkParser(config, 'ru', randomValue);
-                let kgParser = new KtrkParser(config, 'kg', randomValue);
+                let ruParser = new KtrkParser(config.ktrkRu, 'ru', randomValue);
+                let kgParser = new KtrkParser(config.ktrkKG, 'kg', randomValue);
                 ruParser.start();
                 kgParser.start();
                 client.set(config.dataName, randomValue);
