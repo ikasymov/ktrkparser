@@ -7,7 +7,10 @@ let superagent = require('superagent');
 let fs = require('fs');
 let config = require('./config').rbk;
 let Parser = require('./parser');
+let errors = require('./errors');
 let client = require('redis').createClient('redis://h:pd4c104be5ed6b00951dd5c0f8c7461f66790fc55dde2d58612b10a98bb2e5a20@ec2-34-230-117-175.compute-1.amazonaws.com:28789');
+let notPageError = new Error('Page not found');
+let notContentError = new Error('Content Not Found');
 
 Array.prototype.random = function(){
     return this[Math.floor((Math.random()*this.length))];
@@ -24,11 +27,21 @@ RBCParser.prototype.constructor = RBCParser;
 
 
 RBCParser.prototype.start = async function () {
-    this._randomUrl = await this._generateRandom();
-    client.set(this.dataName, await this._randomUrl);
-    if(await this._randomUrl){
-        let resultCode = await this._sendArticle();
-        console.log(resultCode)
+    try{
+        this._randomUrl = await this._generateRandom();
+        client.set(this.dataName, await this._randomUrl);
+        if(await this._randomUrl){
+            let resultCode = await this._sendArticle();
+            console.log(resultCode)
+        }
+    }catch(e){
+        if(e instanceof errors.ContentNotFound){
+            console.log(e.message)
+        }else if(e instanceof errors.PageNotFound){
+            console.log(e.message)
+        }else{
+            console.log(e)
+        }
     }
 };
 
@@ -60,10 +73,10 @@ RBCParser.prototype._doc = async function(){
             method: 'GET'
         };
         request(data, function(error, req, body){
-            if(!error){
-                resolve(new dom().parseFromString(body));
+            if(error || req.statusCode === 404){
+                rejected(new errors.PageNotFound('RBC'))
             }
-            rejected(error);
+            resolve(new dom().parseFromString(body));
         });
     });
 };
@@ -76,16 +89,17 @@ RBCParser.prototype._urls = async function(){
             method: 'GET'
         };
         request(data, function(error, req, body){
-            if (error){
-                rejected(error);
+            if (error || req.statusCode === 404){
+                rejected(error || new errors.PageNotFound('KTRK'));
+            }else{
+                let doc = new dom().parseFromString(body);
+                let leftSideBarHtml = xpath.select('/html/body/div[8]/div/div[2]/div[1]/div/div/div/div/div[2]/div', doc).toString();
+                let $ = sh.load(leftSideBarHtml);
+                let urls = $('a').map(function (i, elem) {
+                    return [$(this).attr('href')];
+                }).get();
+                resolve(urls);
             }
-            let doc = new dom().parseFromString(body);
-            let leftSideBarHtml = xpath.select('/html/body/div[8]/div/div[2]/div[1]/div/div/div/div/div[2]/div', doc).toString();
-            let $ = sh.load(leftSideBarHtml);
-            let urls = $('a').map(function (i, elem) {
-                return [$(this).attr('href')];
-            }).get();
-            resolve(urls);
         });
     });
 };

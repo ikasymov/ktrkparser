@@ -56,41 +56,37 @@ Parser.prototype._saveImageByUrl = async function(imgUrl){
 };
 
 Parser.prototype._sendArticle = async function(){
-    try {
-        let title = await this.getArticleTheme();
-        let body = await this.getArticleBody();
-        let img = await this.getArticleImages();
-        this._sendToken = await this.generateToken();
-        if(await this._sendToken){
-            let dataForSend = {
-                url:  this.nambaOne + '/groups/' + this.groupId +'/post',
-                method: 'POST',
-                body: {
-                    content: title + '\r\n\r\n' + body,
-                    comment_enabled: 1
-                },
-                headers: {
-                    'X-Namba-Auth-Token': this._sendToken,
-                },
-                json: true
-            };
-            if(img){
-                dataForSend.body['attachments'] = [{
-                    type: 'media/image',
-                    content: img
-                }];
-            }
-            return new Promise((resolve, reject)=>{
-                request(dataForSend, function (error, req, body) {
-                    if(error){
-                        reject(error);
-                    }
-                    resolve(req.statusCode)
-                });
-            });
+    let title = await this.getArticleTheme();
+    let body = await this.getArticleBody();
+    let img = await this.getArticleImages();
+    this._sendToken = await this.generateToken();
+    if(await this._sendToken){
+        let dataForSend = {
+            url:  this.nambaOne + '/groups/' + this.groupId +'/post',
+            method: 'POST',
+            body: {
+                content: title + '\r\n\r\n' + body,
+                comment_enabled: 1
+            },
+            headers: {
+                'X-Namba-Auth-Token': this._sendToken,
+            },
+            json: true
+        };
+        if(img){
+            dataForSend.body['attachments'] = [{
+                type: 'media/image',
+                content: img
+            }];
         }
-    }catch (e){
-        throw e;
+        return new Promise((resolve, reject)=>{
+            request(dataForSend, function (error, req, body) {
+                if(error){
+                    reject(error);
+                }
+                resolve(req.statusCode)
+            });
+        });
     }
 };
 
