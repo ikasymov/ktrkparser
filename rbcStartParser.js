@@ -5,7 +5,7 @@ let dom = require('xmldom').DOMParser;
 let methods = require('./methods');
 let superagent = require('superagent');
 let fs = require('fs');
-let config = require('./config');
+let config = require('./config').rbk;
 let Parser = require('./parser');
 let client = require('redis').createClient('redis://h:pd4c104be5ed6b00951dd5c0f8c7461f66790fc55dde2d58612b10a98bb2e5a20@ec2-34-230-117-175.compute-1.amazonaws.com:28789');
 
@@ -26,13 +26,15 @@ RBCParser.prototype.constructor = RBCParser;
 RBCParser.prototype.start = async function () {
     this._randomUrl = await this._generateRandom();
     client.set(this.dataName, await this._randomUrl);
-    this._sendToken = await this.generateToken();
-    if(await this._randomUrl && await this._sendToken){
+    if(await this._randomUrl){
         let resultCode = await this._sendArticle();
         console.log(resultCode)
     }
 };
 
+/*
+Not calling another place
+ */
 RBCParser.prototype._generateRandom = async function () {
     let urls = await this._urls();
     return new Promise((resolve, rejected)=>{

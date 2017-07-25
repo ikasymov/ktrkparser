@@ -21,7 +21,7 @@ module.exports = {
             method: 'POST',
             body: {
             'phone': '996121121121',
-                'password': 'password112'
+            'password': 'password112'
             },
             json: true
         };
