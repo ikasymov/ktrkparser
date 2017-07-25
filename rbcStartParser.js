@@ -35,7 +35,7 @@ RBCParser.prototype.start = async function () {
         }else if(e instanceof errors.PageNotFound){
             console.log(e.message)
         }else{
-            console.log(e)
+            console.log(e.message)
         }
     }
 };
@@ -53,7 +53,7 @@ RBCParser.prototype._generateRandom = async function () {
                 if(divideList.length > 0){
                     resolve(methods.random(divideList))
                 }else{
-                    rejected(Error('Not random List'));
+                    rejected(new Error('Not random List'));
                 }
             }
         });
