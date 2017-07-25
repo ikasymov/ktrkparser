@@ -21,7 +21,7 @@ module.exports = {
             method: 'POST',
             body: {
             'phone': '996121121121',
-                'password': 'password112'
+            'password': 'password112'
             },
             json: true
         };
@@ -34,5 +34,8 @@ module.exports = {
             }
         });
     },
-    regex: /(?:&nbsp;|<br>)|(?:&ndash;|<br>)|(?:&raquo;|<br>)|(?:&laquo;|<br>)|(?:&ldquo;|<br>)|(?:&rdquo;|<br>)|(?:&mdash;|<br>)|(?:&nbs;|<br>)|(?:&rsquo;|<br>)|(<([^>]+)>)/g
+    regex: /(?:&nbsp;|<br>)|(?:&ndash;|<br>)|(?:&raquo;|<br>)|(?:&laquo;|<br>)|(?:&ldquo;|<br>)|(?:&rdquo;|<br>)|(?:&mdash;|<br>)|(?:&nbs;|<br>)|(?:&rsquo;|<br>)|(<([^>]+)>)/g,
+    random: function(list){
+        return list[Math.floor((Math.random()*list.length))];
+    }
 };
