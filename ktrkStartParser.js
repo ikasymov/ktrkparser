@@ -6,6 +6,7 @@ let superagent = require('superagent');
 let methods = require('./methods');
 let xpath = require('xpath'),
     dom = require('xmldom').DOMParser;
+let range = require('range');
 let Parser = require('./parser');
 let config = require('./config').ktrk;
 let errors  = require('./errors');
@@ -34,24 +35,24 @@ KtrkParser.prototype._doc = async function(){
                 check = false;
                 reject(error || new errors.PageNotFound('KTRK'));
             }
-            resolve(new dom().parseFromString(body));
+            resolve(body);
         })
     });
 };
 
 KtrkParser.prototype.getArticleImages = async function(){
     let doc = await this._doc();
-    let title = xpath.select('//*[@id="page-content-wrapper"]/div[2]/div[2]/div/div[1]/div[1]/div[2]/div/figure/div', doc).toString();
-    let $ = ch.load(title, {
-    });
-    let url = $('img')[0].attribs.src;
+    let $ = ch.load(doc);
+    let url = $('figure').children('.main-news-thumb').children('img')[0].attribs.src;
     return await this._saveImageByUrl((url ? url: false));
 };
 
 KtrkParser.prototype.getArticleBody = async function(){
     let doc = await this._doc();
-    let bodyHtml = xpath.select('//*[@id="page-content-wrapper"]/div[2]/div[2]/div/div[1]/div[1]/div[2]/div/section', doc).toString();
-    let $ = ch.load(bodyHtml);
+    let $ = ch.load(doc);
+    let html = $('div').children('section');
+    html.children('div').remove();
+    html.children('aside').remove();
     let text = '';
     $('section').children().each(function (i, elem) {
         if ($(this).attr('class') !== 'pull-right') {
@@ -62,11 +63,10 @@ KtrkParser.prototype.getArticleBody = async function(){
 };
 KtrkParser.prototype.getArticleTheme = async function(){
     let doc = await this._doc();
-    let titleHtml = xpath.select('/html/head/title', doc).toString();
-    let getTitle = ch.load(titleHtml);
-    let title = getTitle('title').text();
+    let $ = ch.load(doc);
+    let title = $('title').text();
     if (title.split(' ').length !== 3){
-        return getTitle('title').text();
+        return title;
     }else{
         throw new errors.ContentNotFound(this.value);
     }
@@ -89,6 +89,63 @@ KtrkParser.prototype.start = async function(){
 };
 
 
-let parser = new KtrkParser(config, 'ru', 14649);
-parser.start();
+function getDate(){
+    let date = new Date();
 
+    let hour = date.getHours();
+    hour = (hour < 10 ? "0" : "") + hour;
+
+    let min  = date.getMinutes();
+    min = (min < 10 ? "0" : "") + min;
+
+    let sec  = date.getSeconds();
+    sec = (sec < 10 ? "0" : "") + sec;
+
+    let year = date.getFullYear();
+
+    let month = date.getMonth() + 1;
+    month = (month < 10 ? "0" : "") + month;
+
+    let day  = date.getDate();
+    day = (day < 10 ? "0" : "") + day;
+    return year + '-' + month + '-' + day
+}
+
+async function getHtml(){
+    let data = {
+        url: config.parserUrl + 'posts/general/date?d=' + getDate(),
+        method: 'GET'
+    };
+    return new Promise((resolve, reject)=>{
+        request(data, function(error, req, body){
+            resolve(body)
+        })
+    });
+}
+
+async function getLastPost() {
+    let body = await getHtml();
+    let $ = ch.load(body);
+    return $('div').children('.post-title').attr('href').split('/').slice(-2)[0];
+}
+
+async function getParseUrls(){
+    let lastPost = await getLastPost();
+    client.get(config.dataName, (error, value)=>{
+        client.get(config.dataName2, function (error, check) {
+            if(lastPost !== value && check === 'true'){
+                let randomValue = methods.random(range.range(parseInt(value), parseInt(lastPost) + 1));
+                let ruParser = new KtrkParser(config, 'ru', randomValue);
+                let kgParser = new KtrkParser(config, 'kg', randomValue);
+                ruParser.start();
+                kgParser.start();
+                client.set(config.dataName, randomValue);
+            }else{
+                console.log(error || 'Not random')
+            }
+            client.set(config.dataName2, !check);
+        })
+    })
+}
+
+getParseUrls();
