@@ -89,48 +89,6 @@ KtrkParser.prototype.start = async function(){
 };
 
 
-function getDate(){
-    let date = new Date();
-
-    let hour = date.getHours();
-    hour = (hour < 10 ? "0" : "") + hour;
-
-    let min  = date.getMinutes();
-    min = (min < 10 ? "0" : "") + min;
-
-    let sec  = date.getSeconds();
-    sec = (sec < 10 ? "0" : "") + sec;
-
-    let year = date.getFullYear();
-
-    let month = date.getMonth() + 1;
-    month = (month < 10 ? "0" : "") + month;
-
-    let day  = date.getDate();
-    day = (day < 10 ? "0" : "") + day;
-    return year + '-' + month + '-' + day
-}
-
-async function getHtml(){
-    console.log(config.ktrkKg.parserUrl + 'posts/general/date?d=' + getDate());
-    let data = {
-        url: config.ktrkKg.parserUrl + 'posts/general/date?d=' + getDate(),
-        method: 'GET'
-    };
-    return new Promise((resolve, reject)=>{
-        request(data, function(error, req, body){
-            resolve(body)
-        })
-    });
-}
-
-async function getLastPost() {
-    let body = await getHtml();
-    let $ = ch.load(body);
-    console.log($('div').children('.cat-post.news-body').html());
-    // return $('div').children('.post-title').attr('href').split('/').slice(-2)[0];
-}
-
 async function getParseUrls(lastPost){
     client.get(config.dataName, (error, value)=>{
         client.get(config.dataName2, function (error, check) {
@@ -162,7 +120,7 @@ function getUrl(){
                     if (error || req.statusCode === 404) {
                         if(checkCount === 3){
                             check = false;
-                            console.log('stop')
+                            console.log('stop');
                             client.set(config.dataName4, parseInt(value) - 3, (error)=>{
                                 if(!error){
                                     getUrl()

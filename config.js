@@ -1,6 +1,6 @@
 module.exports = {
     rbk: {
-        group: 1150,
+        group: 1152,
         nambaone: 'https://api.namba1.co',
         parserUrl: 'https://rbc.ru/',
         dataName: 'test_rbk_list',
