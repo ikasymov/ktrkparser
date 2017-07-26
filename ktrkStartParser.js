@@ -26,7 +26,7 @@ KtrkParser.prototype.constructor = KtrkParser;
 
 KtrkParser.prototype._doc = async function(){
     let data = {
-        url: config.parserUrl + 'post/' + this.value +'/' + this.language,
+        url: this.parseUrl + 'post/' + this.value +'/' + this.language,
         method: 'GET'
     };
     return new Promise((resolve, reject)=>{
@@ -112,6 +112,7 @@ function getDate(){
 }
 
 async function getHtml(){
+    console.log(config.ktrkKg.parserUrl + 'posts/general/date?d=' + getDate());
     let data = {
         url: config.ktrkKg.parserUrl + 'posts/general/date?d=' + getDate(),
         method: 'GET'
@@ -126,13 +127,14 @@ async function getHtml(){
 async function getLastPost() {
     let body = await getHtml();
     let $ = ch.load(body);
-    return $('div').children('.post-title').attr('href').split('/').slice(-2)[0];
+    console.log($('div').children('.cat-post.news-body').html());
+    // return $('div').children('.post-title').attr('href').split('/').slice(-2)[0];
 }
 
-async function getParseUrls(){
-    let lastPost = await getLastPost();
+async function getParseUrls(lastPost){
     client.get(config.dataName, (error, value)=>{
         client.get(config.dataName2, function (error, check) {
+            console.log(lastPost);
             if(lastPost !== value && check === 'true'){
                 let randomValue = methods.random(range.range(parseInt(value), parseInt(lastPost) + 1));
                 let ruParser = new KtrkParser(config.ktrkRu, 'ru', randomValue);
@@ -148,4 +150,49 @@ async function getParseUrls(){
     })
 }
 
-getParseUrls();
+let checkCount = 0;
+function getUrl(){
+    client.get(config.dataName4, (error, value)=>{
+            if (check) {
+                let data = {
+                    url: config.ktrkRu.parserUrl + 'post/' + value + '/ru',
+                    method: 'GET'
+                };
+                request(data, (error, req, body) => {
+                    if (error || req.statusCode === 404) {
+                        if(checkCount === 3){
+                            check = false;
+                            console.log('stop')
+                            client.set(config.dataName4, parseInt(value) - 3, (error)=>{
+                                if(!error){
+                                    getUrl()
+                                }
+                            });
+                        }else{
+                            console.log('not stop');
+                            client.set(config.dataName4, parseInt(value) + 1, (error)=>{
+                                if(!error){
+                                    getUrl();
+                                }
+                            });
+                        }
+                        checkCount ++;
+                    } else {
+                        console.log('not 404');
+                        client.set(config.dataName4, parseInt(value) + 1, (error) => {
+                            if (!error) {
+                                getUrl();
+                            }
+                        });
+                    }
+                })
+            } else {
+                getParseUrls(value)
+            }
+    })
+};
+
+async function someFunction(){
+   getUrl()
+}
+someFunction();

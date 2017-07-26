@@ -10,6 +10,8 @@ module.exports = {
     ktrk: {
         dataName: 'test_ktrk_list',
         dataName2: 'test_ktrk_check',
+        dataName3: 'test_ktrk_checkCount',
+        dataName4: 'test_ktrk_getUrl',
         ktrkRu: {
             group: 1144,
             nambaone: 'https://api.namba1.co',
