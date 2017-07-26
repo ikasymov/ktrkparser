@@ -76,6 +76,7 @@ KtrkParser.prototype.getArticleTheme = async function(){
 KtrkParser.prototype.start = async function(){
     try{
         let resultCode = await this._sendArticle();
+
         console.log(resultCode)
     }catch(e){
         if(e instanceof errors.ContentNotFound){
@@ -91,20 +92,18 @@ KtrkParser.prototype.start = async function(){
 
 async function getParseUrls(lastPost){
     client.get(config.dataName, (error, value)=>{
-        client.get(config.dataName2, function (error, check) {
-            console.log(lastPost);
-            if(lastPost !== value && check === 'true'){
-                let randomValue = methods.random(range.range(parseInt(value), parseInt(lastPost) + 1));
-                let ruParser = new KtrkParser(config.ktrkRu, 'ru', randomValue);
-                let kgParser = new KtrkParser(config.ktrkKg, 'kg', randomValue);
-                ruParser.start();
-                kgParser.start();
-                client.set(config.dataName, randomValue);
-            }else{
-                console.log(error || 'Not random')
-            }
-            client.set(config.dataName2, !check);
-        })
+        console.log(lastPost);
+        if(lastPost !== value){
+            let randomValue = methods.random(range.range(parseInt(value), parseInt(lastPost) + 1));
+            let ruParser = new KtrkParser(config.ktrkRu, 'ru', randomValue);
+            let kgParser = new KtrkParser(config.ktrkKg, 'kg', randomValue);
+            ruParser.start();
+            kgParser.start();
+            client.set(config.dataName, randomValue);
+        }else{
+            console.log(error || 'Not random')
+        }
+        client.set(config.dataName2, !check);
     })
 }
 
