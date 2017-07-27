@@ -25,6 +25,7 @@ KtrkParser.prototype.constructor = KtrkParser;
 
 
 KtrkParser.prototype._doc = async function(){
+    console.log(this.parseUrl + 'post/' + this.value +'/' + this.language)
     let data = {
         url: this.parseUrl + 'post/' + this.value +'/' + this.language,
         method: 'GET'
@@ -92,14 +93,15 @@ KtrkParser.prototype.start = async function(){
 
 async function getParseUrls(lastPost){
     client.get(config.dataName, (error, value)=>{
-        console.log(lastPost);
+        console.log(lastPost + 'last post');
         if(lastPost !== value){
-            let randomValue = methods.random(range.range(parseInt(value), parseInt(lastPost) + 1));
+            let randomValue = methods.random(range.range(parseInt(value), parseInt(lastPost) + 1).slice(0, -1));
             let ruParser = new KtrkParser(config.ktrkRu, 'ru', randomValue);
             let kgParser = new KtrkParser(config.ktrkKg, 'kg', randomValue);
             ruParser.start();
             kgParser.start();
-            client.set(config.dataName, randomValue);
+            client.set(config.dataName, randomValue + 1);
+            client.set(config.dataName4, randomValue + 1);
         }else{
             console.log(error || 'Not random')
         }
@@ -110,6 +112,7 @@ async function getParseUrls(lastPost){
 let checkCount = 0;
 function getUrl(){
     client.get(config.dataName4, (error, value)=>{
+        console.log('data4Value '+ value)
             if (check) {
                 let data = {
                     url: config.ktrkRu.parserUrl + 'post/' + value + '/ru',
@@ -149,7 +152,4 @@ function getUrl(){
     })
 };
 
-async function someFunction(){
-   getUrl()
-}
-someFunction();
+getUrl();
