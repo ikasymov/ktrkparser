@@ -28,5 +28,13 @@ module.exports = {
             user: '996121121121',
             passport: 'password112',
         }
-    }
+    },
+    village: {
+        group: 1155,
+        nambaone: 'https://api.namba1.co',
+        parserUrl: 'http://www.the-village.ru/',
+        dataName: 'test_village',
+        user: '996121121121',
+        passport: 'password112'
+    },
 };
