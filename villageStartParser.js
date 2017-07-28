@@ -28,7 +28,7 @@ VillageParser.prototype._urls = async function(){
     });
 };
 
-VillageParser.prototype._getRandomUrl = async function(){
+VillageParser.prototype._GenerateRandomUrl = async function(){
     let url = await this._urls();
     let reverseUrl = url.reverse();
     return new Promise((resolve, reject)=>{
@@ -37,7 +37,7 @@ VillageParser.prototype._getRandomUrl = async function(){
             if(sliceListAfterLastNews.length  > 0){
                 let randomUrl = methods.random(sliceListAfterLastNews);
                 client.set(config.dataName, randomUrl);
-                this._random = randomUrl;
+                this._randomUrl = randomUrl;
                 resolve(true)
             }else{
                 resolve(false)
@@ -47,7 +47,7 @@ VillageParser.prototype._getRandomUrl = async function(){
 };
 
 VillageParser.prototype._getHtmlForParse = async function(){
-    let url = await this._random;
+    let url = await this._randomUrl;
     let data = {
         url: url,
         method: 'GET'
@@ -75,7 +75,7 @@ VillageParser.prototype.getArticleBody = async function () {
 };
 
 VillageParser.prototype.getArticleTheme = async function(){
-  let url = await this._random;
+  let url = await this._randomUrl;
   return new Promise((resolve,reject)=>{
       x(url, 'title')((error, title)=>{
           if(!error){
@@ -87,7 +87,7 @@ VillageParser.prototype.getArticleTheme = async function(){
 };
 
 VillageParser.prototype.start = async function(){
-    if(await this._getRandomUrl()){
+    if(await this._GenerateRandomUrl()){
         let statusCode = await this._sendArticle();
         console.log(statusCode)
     }else{
