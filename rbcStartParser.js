@@ -9,8 +9,6 @@ let config = require('./config').rbk;
 let Parser = require('./parser');
 let errors = require('./errors');
 let client = require('redis').createClient('redis://h:pd4c104be5ed6b00951dd5c0f8c7461f66790fc55dde2d58612b10a98bb2e5a20@ec2-34-230-117-175.compute-1.amazonaws.com:28789');
-let notPageError = new Error('Page not found');
-let notContentError = new Error('Content Not Found');
 
 function RBCParser(config){
     Parser.apply(this, arguments);
@@ -139,4 +137,5 @@ RBCParser.prototype.getArticleBody = async function(){
 };
 
 let parser = new RBCParser(config);
-parser.start();
+parser.everySecond();
+

@@ -1,7 +1,7 @@
 let request = require('request');
 let superagent = require('superagent');
 let fs = require('fs');
-
+let client = require('redis').createClient('redis://h:pd4c104be5ed6b00951dd5c0f8c7461f66790fc55dde2d58612b10a98bb2e5a20@ec2-34-230-117-175.compute-1.amazonaws.com:28789');
 
 function Parser(config){
     this.groupId = config.group;
@@ -10,6 +10,7 @@ function Parser(config){
     this.dataName = config.dataName;
     this.user = config.user;
     this.passport = config.passport;
+    this.dataForEverySecond = config.dataForSecond
 };
 
 Parser.prototype.generateToken = async function(){
@@ -88,6 +89,23 @@ Parser.prototype._sendArticle = async function(){
             });
         });
     }
+};
+
+Parser.prototype.everySecond = function () {
+    client.get(this.dataForEverySecond, (error, value)=>{
+        let current = parseInt(value);
+        let dict = {
+            0: true,
+            1: false
+        };
+        if(dict[current]){
+            this.start();
+            client.set(this.dataForEverySecond, 1)
+        }else{
+            console.log('false');
+            client.set(this.dataForEverySecond, 0)
+        }
+    })
 };
 
 module.exports = Parser;

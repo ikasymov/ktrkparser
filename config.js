@@ -5,7 +5,8 @@ module.exports = {
         parserUrl: 'https://rbc.ru/',
         dataName: 'test_rbk_list',
         user: '996121121121',
-        passport: 'password112'
+        passport: 'password112',
+        dataForSecond: 'rbcCheckSecond'
     },
     ktrk: {
         dataName: 'test_ktrk_list',
@@ -19,6 +20,7 @@ module.exports = {
             user: '996121121121',
             passport: 'password112',
             dataName: 'test_ktrk_list',
+            dataForSecond: 'ktrkCheckSecondRu'
         },
         ktrkKg: {
             group: 1143,
@@ -27,6 +29,7 @@ module.exports = {
             parserUrl: 'http://www.ktrk.kg/',
             user: '996121121121',
             passport: 'password112',
+            dataForSecond: 'ktrkCheckSecondKg'
         }
     },
     village: {
@@ -35,6 +38,7 @@ module.exports = {
         parserUrl: 'http://www.the-village.ru/',
         dataName: 'test_village',
         user: '996121121121',
-        passport: 'password112'
+        passport: 'password112',
+        dataForSecond: 'villageCheckSecond'
     },
 };

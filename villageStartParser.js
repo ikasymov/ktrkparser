@@ -101,4 +101,4 @@ VillageParser.prototype.getArticleImages = async function(){
 
 let parser = new VillageParser(config);
 
-parser.start();
+parser.everySecond();
