@@ -33,7 +33,7 @@ module.exports = {
         }
     },
     village: {
-        group: 1155,
+        group: 1156,
         nambaone: 'https://api.namba1.co',
         parserUrl: 'http://www.the-village.ru/',
         dataName: 'test_village',
