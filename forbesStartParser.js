@@ -27,14 +27,22 @@ ForbesParser.prototype._urls = async function(){
 ForbesParser.prototype.getArticleBody = async function(){
   let html = this._html;
   return new Promise((resolve, reject)=>{
-      x(html, '.article-top', '.body-part-top.js-mediator-article')((error, text)=>{
-          x(html, '.article-top', '.subtitle')((error, title)=>{
-              if(!error){
-                  resolve(title + '\r\n\r\n' + text)
-              }
-              reject(error)
-          });
-      })
+      x(html, '.section-and-hashtag', '.hashtag')((error, value)=>{
+          if(value !== '#рейтинг звезд'){
+              x(html, '.article-top', '.body-part-top.js-mediator-article')((error, text)=>{
+                  x(html, '.article-top', '.subtitle')((error, title)=>{
+                      x(html, '.article-bottom', '.body-part-bottom.js-mediator-article', '.body-page')((error, bottomText)=>{
+                          if(!error){
+                              resolve(title + '\r\n\r\n' + text + '\r\n' + bottomText)
+                          }
+                          reject(error)
+                      });
+                  });
+              })
+          }else{
+              reject(new Error('рейтинг'))
+          }
+      });
   });
 };
 
@@ -72,7 +80,7 @@ ForbesParser.prototype.start = async function(){
           let resultCode = await this._sendArticle();
           console.log(resultCode)
       }else{
-          console.log('Not random')
+          console.log('not random')
       }
   }catch(e){
       console.log(e.message)
