@@ -49,5 +49,14 @@ module.exports = {
         user: '996121121121',
         passport: 'password112',
         dataForSecond: 'forbesCheckSecond'
+    },
+    kp: {
+        group: 1159,
+        nambaone: 'https://api.namba1.co',
+        parserUrl: 'http://www.kp.kg/',
+        dataName: 'test_kp_test',
+        user: '996121121121',
+        passport: 'password112',
+        dataForSecond: 'forbesCheckSecond'
     }
 };
