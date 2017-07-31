@@ -1,5 +1,5 @@
 let request = require('request');
-let Parser = require('./parser');
+let RandomParser = require('./random');
 let errors = require('./errors');
 let methods = require('./methods');
 let config = require('./config').village;
@@ -10,10 +10,10 @@ let client = require('redis').createClient('redis://h:pd4c104be5ed6b00951dd5c0f8
 
 
 function VillageParser(config){
-    Parser.apply(this, arguments);
+    RandomParser.apply(this, arguments);
 }
 
-VillageParser.prototype = Object.create(Parser.prototype);
+VillageParser.prototype = Object.create(RandomParser.prototype);
 VillageParser.prototype.constructor = VillageParser;
 
 VillageParser.prototype._urls = async function(){
@@ -28,42 +28,8 @@ VillageParser.prototype._urls = async function(){
     });
 };
 
-VillageParser.prototype._GenerateRandomUrl = async function(){
-    let url = await this._urls();
-    let reverseUrl = url.reverse();
-    return new Promise((resolve, reject)=>{
-        client.get(this.dataName, (error, value)=>{
-            let sliceListAfterLastNews = reverseUrl.slice(reverseUrl.indexOf(value) + 1);
-            if(sliceListAfterLastNews.length  > 0){
-                let randomUrl = methods.random(sliceListAfterLastNews);
-                client.set(config.dataName, randomUrl);
-                this._randomUrl = randomUrl;
-                resolve(true)
-            }else{
-                resolve(false)
-            }
-        });
-    });
-};
-
-VillageParser.prototype._getHtmlForParse = async function(){
-    let url = await this._randomUrl;
-    let data = {
-        url: url,
-        method: 'GET'
-    };
-    return new Promise((resolve, reject)=>{
-        request(data, (error, req, body)=>{
-            if(!error){
-                resolve(body)
-            }
-            reject(error || new errors.PageNotFound('Village'))
-        })
-    })
-};
-
 VillageParser.prototype.getArticleBody = async function () {
-    let body = await this._getHtmlForParse();
+    let body = this._html;
     return new Promise((resolve, reject)=>{
         x(body, '.row.post-body', ['.article-text .stk-reset'])((error, text)=>{
             if(!error){
@@ -87,11 +53,17 @@ VillageParser.prototype.getArticleTheme = async function(){
 };
 
 VillageParser.prototype.start = async function(){
-    if(await this._GenerateRandomUrl()){
-        let statusCode = await this._sendArticle();
-        console.log(statusCode)
-    }else{
-        console.log('Not random')
+    let url = this._generateRandomUrl(config);
+    let html = this._getHtmlForParse();
+    try{
+        if(url && html){
+            let statusCode = await this._sendArticle();
+            console.log(statusCode)
+        }else{
+            console.log('Not random')
+        }
+    }catch(e){
+        console.log(e.message)
     }
 };
 

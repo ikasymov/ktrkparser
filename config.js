@@ -41,4 +41,13 @@ module.exports = {
         passport: 'password112',
         dataForSecond: 'villageCheckSecond'
     },
+    forbes: {
+        group: 1158,
+        nambaone: 'https://api.namba1.co',
+        parserUrl: 'http://www.forbes.ru/news',
+        dataName: 'test_forbes',
+        user: '996121121121',
+        passport: 'password112',
+        dataForSecond: 'forbesCheckSecond'
+    }
 };
