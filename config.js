@@ -60,7 +60,7 @@ module.exports = {
         dataForSecond: 'forbesCheckSecond'
     },
     doma: {
-        group: 1159,
+        group: 1165,
         nambaone: 'https://api.namba1.co',
         parserUrl: 'https://www.edimdoma.ru/',
         dataName: 'test_doma_test',
