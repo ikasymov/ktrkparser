@@ -51,7 +51,7 @@ module.exports = {
         dataForSecond: 'forbesCheckSecond'
     },
     kp: {
-        group: 1159,
+        group: 1145,
         nambaone: 'https://api.namba1.co',
         parserUrl: 'http://www.kp.kg/',
         dataName: 'test_kp_test',
