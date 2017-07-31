@@ -25,7 +25,6 @@ KtrkParser.prototype.constructor = KtrkParser;
 
 
 KtrkParser.prototype._doc = async function(){
-    console.log(this.parseUrl + 'post/' + this.value +'/' + this.language)
     let data = {
         url: this.parseUrl + 'post/' + this.value +'/' + this.language,
         method: 'GET'
@@ -62,6 +61,7 @@ KtrkParser.prototype.getArticleBody = async function(){
     });
     return text;
 };
+
 KtrkParser.prototype.getArticleTheme = async function(){
     let doc = await this._doc();
     let $ = ch.load(doc);
