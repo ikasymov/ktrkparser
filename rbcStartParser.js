@@ -108,7 +108,7 @@ RBCParser.prototype.getArticleImages = async function(){
         }
     });
     if(imgUrls){
-        return await this._saveImageByUrl(imgUrls)
+        return [await this._saveImageByUrl(imgUrls)]
     }else{
         return false;
     }

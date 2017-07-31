@@ -64,7 +64,7 @@ ForbesParser.prototype.getArticleImages = async function(){
     return new Promise((resolve, reject)=>{
         x(html, '.article-top', '.field-img.first img@src')((error, imgUrl)=>{
             if(!error){
-                resolve(this._saveImageByUrl(imgUrl))
+                resolve([this._saveImageByUrl(imgUrl)])
             }
             reject(error)
         })

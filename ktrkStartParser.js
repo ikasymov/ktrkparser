@@ -44,7 +44,7 @@ KtrkParser.prototype.getArticleImages = async function(){
     let doc = await this._doc();
     let $ = ch.load(doc);
     let url = $('figure').children('.main-news-thumb').children('img')[0].attribs.src;
-    return await this._saveImageByUrl((url ? url: false));
+    return [await this._saveImageByUrl((url ? url: false))]
 };
 
 KtrkParser.prototype.getArticleBody = async function(){

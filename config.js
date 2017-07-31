@@ -58,5 +58,14 @@ module.exports = {
         user: '996121121121',
         passport: 'password112',
         dataForSecond: 'forbesCheckSecond'
+    },
+    doma: {
+        group: 1159,
+        nambaone: 'https://api.namba1.co',
+        parserUrl: 'https://www.edimdoma.ru/',
+        dataName: 'test_doma_test',
+        user: '996121121121',
+        passport: 'password112',
+        dataForSecond: 'forbesCheckSecond'
     }
 };

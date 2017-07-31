@@ -19,7 +19,7 @@ KpParser.prototype.getArticleImages = async function(){
     let $ = sh.load(imageHtml);
     try {
         let imgUrl = 'http:' + $('img')[0].attribs.src;
-        return await this._saveImageByUrl(imgUrl)
+        return [await this._saveImageByUrl(imgUrl)]
     }catch (error){
         return false
     }

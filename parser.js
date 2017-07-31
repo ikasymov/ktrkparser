@@ -74,11 +74,11 @@ Parser.prototype._sendArticle = async function(){
             },
             json: true
         };
-        if(img){
-            dataForSend.body['attachments'] = [{
-                type: 'media/image',
-                content: img
-            }];
+        if(img.length > 0){
+            dataForSend.body['attachments'] = [];
+            for(let i in img){
+                dataForSend.body.attachments.push({type: 'media/image', content: img[i]})
+            };
         }
         return new Promise((resolve, reject)=>{
             request(dataForSend, function (error, req, body) {
