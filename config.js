@@ -4,8 +4,6 @@ module.exports = {
         nambaone: 'https://api.namba1.co',
         parserUrl: 'https://rbc.ru/',
         dataName: 'test_rbk_list',
-        user: '996121121121',
-        passport: 'password112',
         dataForSecond: 'rbcCheckSecond'
     },
     ktrk: {
@@ -17,8 +15,6 @@ module.exports = {
             group: 1144,
             nambaone: 'https://api.namba1.co',
             parserUrl: 'http://www.ktrk.kg/',
-            user: '996121121121',
-            passport: 'password112',
             dataName: 'test_ktrk_list',
             dataForSecond: 'ktrkCheckSecondRu'
         },
@@ -27,8 +23,6 @@ module.exports = {
             nambaone: 'https://api.namba1.co',
             dataName: 'test_ktrk_list',
             parserUrl: 'http://www.ktrk.kg/',
-            user: '996121121121',
-            passport: 'password112',
             dataForSecond: 'ktrkCheckSecondKg'
         }
     },
@@ -37,8 +31,6 @@ module.exports = {
         nambaone: 'https://api.namba1.co',
         parserUrl: 'http://www.the-village.ru/',
         dataName: 'test_village',
-        user: '996121121121',
-        passport: 'password112',
         dataForSecond: 'villageCheckSecond'
     },
     forbes: {
@@ -46,8 +38,6 @@ module.exports = {
         nambaone: 'https://api.namba1.co',
         parserUrl: 'http://www.forbes.ru/news',
         dataName: 'test_forbes',
-        user: '996121121121',
-        passport: 'password112',
         dataForSecond: 'forbesCheckSecond'
     },
     kp: {
@@ -55,8 +45,6 @@ module.exports = {
         nambaone: 'https://api.namba1.co',
         parserUrl: 'http://www.kp.kg/',
         dataName: 'test_kp_test',
-        user: '996121121121',
-        passport: 'password112',
         dataForSecond: 'forbesCheckSecond'
     },
     doma: {
@@ -64,8 +52,6 @@ module.exports = {
         nambaone: 'https://api.namba1.co',
         parserUrl: 'https://www.edimdoma.ru/',
         dataName: 'test_doma_test',
-        user: '996121121121',
-        passport: 'password112',
         dataForSecond: 'forbesCheckSecond'
     }
 };
