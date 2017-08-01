@@ -53,14 +53,14 @@ VillageParser.prototype.getArticleTheme = async function(){
 };
 
 VillageParser.prototype.start = async function(){
-    let url = this._generateRandomUrl(config);
-    let html = this._getHtmlForParse();
+    let url = await this._generateRandomUrl(config);
+    let html = await this._getHtmlForParse();
     try{
         if(url && html){
             let statusCode = await this._sendArticle();
             console.log(statusCode)
         }else{
-            console.log('Not random')
+            console.log('not random')
         }
     }catch(e){
         console.log(e.message)
@@ -73,4 +73,4 @@ VillageParser.prototype.getArticleImages = async function(){
 
 let parser = new VillageParser(config);
 
-parser.everySecond();
+parser.start();
