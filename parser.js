@@ -8,8 +8,8 @@ function Parser(config){
     this.nambaOne = config.nambaone;
     this.parseUrl = config.parserUrl;
     this.dataName = config.dataName;
-    this.user = config.user;
-    this.passport = config.passport;
+    this.user = process.env.namba_user;
+    this.passport = process.env.namba_passport;
     this.dataForEverySecond = config.dataForSecond
 };
 
