@@ -55,7 +55,7 @@ module.exports = {
         dataForSecond: 'DomaCheckSecond'
     },
     kernel: {
-        group: 1159,
+        group: 1167,
         nambaone: 'https://api.namba1.co',
         parserUrl: 'http://kernel.net.kg/',
         dataName: 'test_kernel_test',
