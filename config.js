@@ -45,13 +45,20 @@ module.exports = {
         nambaone: 'https://api.namba1.co',
         parserUrl: 'http://www.kp.kg/',
         dataName: 'test_kp_test',
-        dataForSecond: 'forbesCheckSecond'
+        dataForSecond: 'KpCheckSecond'
     },
     doma: {
         group: 1165,
         nambaone: 'https://api.namba1.co',
         parserUrl: 'https://www.edimdoma.ru/',
         dataName: 'test_doma_test',
-        dataForSecond: 'forbesCheckSecond'
+        dataForSecond: 'DomaCheckSecond'
+    },
+    kernel: {
+        group: 1159,
+        nambaone: 'https://api.namba1.co',
+        parserUrl: 'http://kernel.net.kg/',
+        dataName: 'test_kernel_test',
+        dataForSecond: 'KernelCheckSecond'
     }
 };

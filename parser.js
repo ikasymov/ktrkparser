@@ -40,12 +40,12 @@ Parser.prototype._saveImageByUrl = async function(imgUrl){
     let value = Math.random();
     return new Promise((resolve, reject)=>{
         if (imgUrl){
-            request(imgUrl).pipe(fs.createWriteStream('./' + 'kp' +  value + '.jpg')).on('finish', function (error, req) {
+            request(imgUrl).pipe(fs.createWriteStream('./' + 'kp' +  value + imgUrl.slice(-4))).on('finish', function (error, req) {
                 if (error){
                     reject(error);
                 }
-                superagent.post('https://files.namba1.co').attach('file', './' + 'kp' +  value + '.jpg').end(function(err, req) {
-                    fs.unlink('./' + 'kp' +  value + '.jpg', function (error, value) {});
+                superagent.post('https://files.namba1.co').attach('file', './' + 'kp' +  value + imgUrl.slice(-4)).end(function(err, req) {
+                    fs.unlink('./' + 'kp' +  value + imgUrl.slice(-4), function (error, value) {});
                     resolve(req.body.file);
                 });
             });
@@ -61,34 +61,32 @@ Parser.prototype._sendArticle = async function(){
     let body = await this.getArticleBody();
     let img = await this.getArticleImages();
     this._sendToken = await this.generateToken();
-    if(await this._sendToken){
-        let dataForSend = {
-            url:  this.nambaOne + '/groups/' + this.groupId +'/post',
-            method: 'POST',
-            body: {
-                content: title + '\r\n\r\n' + body,
-                comment_enabled: 1
-            },
-            headers: {
-                'X-Namba-Auth-Token': this._sendToken,
-            },
-            json: true
+    let dataForSend = {
+        url:  this.nambaOne + '/groups/' + this.groupId +'/post',
+        method: 'POST',
+        body: {
+            content: title + '\r\n\r\n' + body,
+            comment_enabled: 1
+        },
+        headers: {
+            'X-Namba-Auth-Token': this._sendToken,
+        },
+        json: true
+    };
+    if(img.length > 0){
+        dataForSend.body['attachments'] = [];
+        for(let i in img){
+            dataForSend.body.attachments.push({type: 'media/image', content: img[i]})
         };
-        if(img.length > 0){
-            dataForSend.body['attachments'] = [];
-            for(let i in img){
-                dataForSend.body.attachments.push({type: 'media/image', content: img[i]})
-            };
-        }
-        return new Promise((resolve, reject)=>{
-            request(dataForSend, function (error, req, body) {
-                if(error){
-                    reject(error);
-                }
-                resolve(req.statusCode)
-            });
-        });
     }
+    return new Promise((resolve, reject)=>{
+        request(dataForSend, function (error, req, body) {
+            if(error){
+                reject(error);
+            }
+            resolve(req.statusCode)
+        });
+    });
 };
 
 Parser.prototype.everySecond = function () {
