@@ -60,5 +60,12 @@ module.exports = {
         parserUrl: 'http://kernel.net.kg/',
         dataName: 'test_kernel_test',
         dataForSecond: 'KernelCheckSecond'
+    },
+    akcha: {
+        group: 1168,
+        nambaone: 'https://api.namba1.co',
+        parserUrl: 'https://www.akchabar.kg/news/',
+        dataName: 'test_akcha_test',
+        dataForSecond: 'AkchaCheckSecond'
     }
 };
