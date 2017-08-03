@@ -59,17 +59,22 @@ ForbesParser.prototype.getArticleTheme = async function(){
 
 };
 
-ForbesParser.prototype.getArticleImages = async function(){
+ForbesParser.prototype.getImgUrl = async function(){
     let html = this._html;
     return new Promise((resolve, reject)=>{
         x(html, '.article-top', '.field-img.first img@src')((error, imgUrl)=>{
             if(!error){
-                resolve([this._saveImageByUrl(imgUrl)])
+                resolve(imgUrl)
             }
             reject(error)
         })
     });
 
+};
+
+ForbesParser.prototype.getArticleImages = async function(){
+    const url = await this.getImgUrl();
+    return [await this._saveImageByUrl(url)];
 };
 
 ForbesParser.prototype.start = async function(){
