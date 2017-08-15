@@ -56,9 +56,9 @@ Parser.prototype._saveImageByUrl = async function(imgUrl){
     });
 };
 
-Parser.prototype._sendArticle = async function(){
+Parser.prototype._sendArticle = async function(url){
     let title = await this.getArticleTheme();
-    let body = await this.getArticleBody();
+    let body = await this.getArticleBody().slice(0, 155) + '.... Что бы читать дальше перейдите по ссылке\n' + url;
     let img = await this.getArticleImages();
     this._sendToken = await this.generateToken();
     let dataForSend = {

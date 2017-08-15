@@ -87,7 +87,7 @@ DomaParser.prototype.getArticleBody = async function(){
 DomaParser.prototype.start = async function(){
     let html = await this._generateHtml();
     if(html){
-        let statusCode = await this._sendArticle();
+        let statusCode = await this._sendArticle(this._url);
         console.log(statusCode)
     }
 };

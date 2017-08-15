@@ -4,6 +4,7 @@ var client = require('redis').createClient('redis://h:pd4c104be5ed6b00951dd5c0f8
 // client.set('last_news_ru', 14727);
 // client.set('kp_news', 2805748);
 client.get('last_news_ru', function (error, value) {
-   console.log(value)
+   console.log(value);
 });
-// client.set('', 14684);
+// client.set('', 14684)
+client.set('test_akcha_test', 'https://www.akchabar.kg/news/gossluzhashih-obyazali-otchityvatsya-o-dohodah-i-rashodah-v-deklaraciyah/');

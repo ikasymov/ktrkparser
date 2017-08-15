@@ -89,7 +89,7 @@ KernelParser.prototype.getArticleBody = async function(){
 KernelParser.prototype.start = async function(){
     let html = await this._generateHtml();
     let text = await this.getArticleBody();
-    let statusCode = await this._sendArticle();
+    let statusCode = await this._sendArticle(this._url);
     console.log(statusCode)
 };
 

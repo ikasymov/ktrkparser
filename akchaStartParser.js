@@ -76,7 +76,7 @@ AkchaParser.prototype.getArticleImages = async function(){
 
 AkchaParser.prototype.start = async function(){
     const html = await this._generateHtml();
-    const statusCode = await this._sendArticle();
+    const statusCode = await this._sendArticle(this._url);
     console.log(statusCode)
 };
 

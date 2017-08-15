@@ -82,7 +82,7 @@ ForbesParser.prototype.start = async function(){
       let urls = await this._generateRandomUrl(config);
       let html = await this._getHtmlForParse();
       if(urls && html){
-          let resultCode = await this._sendArticle();
+          let resultCode = await this._sendArticle(this._randomUrl);
           console.log(resultCode)
       }else{
           console.log('not random')

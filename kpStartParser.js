@@ -71,7 +71,7 @@ KpParser.prototype.start = async function(){
       let html = await this._getHtmlForParse();
 
       if(url && html){
-          let resultCode = await this._sendArticle();
+          let resultCode = await this._sendArticle(this._randomUrl);
           console.log(resultCode)
       }
   }catch(e){

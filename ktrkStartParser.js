@@ -25,8 +25,9 @@ KtrkParser.prototype.constructor = KtrkParser;
 
 
 KtrkParser.prototype._doc = async function(){
+    this.url = this.parseUrl + 'post/' + this.value +'/' + this.language
     let data = {
-        url: this.parseUrl + 'post/' + this.value +'/' + this.language,
+        url: this.url,
         method: 'GET'
     };
     return new Promise((resolve, reject)=>{
@@ -76,7 +77,7 @@ KtrkParser.prototype.getArticleTheme = async function(){
 
 KtrkParser.prototype.start = async function(){
     try{
-        let resultCode = await this._sendArticle();
+        let resultCode = await this._sendArticle(this.url);
 
         console.log(resultCode)
     }catch(e){
