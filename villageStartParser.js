@@ -57,7 +57,7 @@ VillageParser.prototype.start = async function(){
     let html = await this._getHtmlForParse();
     try{
         if(url && html){
-            let statusCode = await this._sendArticle();
+            let statusCode = await this._sendArticle(this._randomUrl);
             console.log(statusCode)
         }else{
             console.log('not random')

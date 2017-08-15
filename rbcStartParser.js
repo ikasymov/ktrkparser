@@ -23,7 +23,7 @@ RBCParser.prototype.start = async function () {
         this._randomUrl = await this._generateRandom();
         client.set(this.dataName, await this._randomUrl);
         if(await this._randomUrl){
-            let resultCode = await this._sendArticle();
+            let resultCode = await this._sendArticle(this._randomUrl);
             console.log(resultCode)
         }
     }catch(e){
