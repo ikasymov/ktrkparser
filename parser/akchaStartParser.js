@@ -1,12 +1,14 @@
-const Parser = require('./parser');
+const Parser = require('../parser');
 const request = require('request');
-const errors = require('./errors');
-const methods = require('./methods');
-const config = require('./config').akcha;
+const errors = require('../errors');
+const methods = require('../methods');
+const config = require('../config').akcha;
 const ch = require('cheerio');
 const Xray = require('x-ray');
 const x = Xray();
-const client = require('redis').createClient('redis://h:pd4c104be5ed6b00951dd5c0f8c7461f66790fc55dde2d58612b10a98bb2e5a20@ec2-34-230-117-175.compute-1.amazonaws.com:28789');
+let cron = require('node-cron');
+let async = require('async');
+const client = require('../client');
 
 function AkchaParser(config, url){
     Parser.apply(this, arguments);
@@ -80,6 +82,10 @@ AkchaParser.prototype.start = async function(){
     console.log(statusCode)
 };
 
+function asyncStart(elem){
+    let parser = new AkchaParser(config, elem);
+    return parser.start();
+}
 
 async function getUrlsAndStartParser(){
     return new Promise((resolve, reject)=>{
@@ -89,11 +95,13 @@ async function getUrlsAndStartParser(){
                 let list = reverseList.slice(reverseList.indexOf(value) + 1);
                 if(list.length > 0){
                     client.set(config.dataName, list.slice(-1));
-                    list.forEach((elem)=>{
-                        let parser = new AkchaParser(config, elem);
-                        parser.start();
+                    async.map(list, asyncStart, (error, result)=>{
+                        if(!error){
+                            resolve(result)
+                        }else{
+                            reject(error)
+                        }
                     });
-                    resolve(list)
                 }
                 reject(new Error('Not list'))
             });
@@ -101,4 +109,7 @@ async function getUrlsAndStartParser(){
     });
 }
 
-getUrlsAndStartParser();
+module.exports.start = getUrlsAndStartParser();
+
+
+module.exports.client = client;

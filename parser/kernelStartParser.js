@@ -1,12 +1,12 @@
-let Parser = require('./parser');
+let Parser = require('../parser');
 let request = require('request');
-let errors = require('./errors');
-let methods = require('./methods');
-let config = require('./config').kernel;
+let errors = require('../errors');
+let methods = require('../methods');
+let config = require('../config').kernel;
 let ch = require('cheerio');
 let Xray = require('x-ray');
 let x = Xray();
-let client = require('redis').createClient('redis://h:pd4c104be5ed6b00951dd5c0f8c7461f66790fc55dde2d58612b10a98bb2e5a20@ec2-34-230-117-175.compute-1.amazonaws.com:28789');
+let client = require('../client');
 
 function KernelParser(config, url, img){
     Parser.apply(this, arguments);
@@ -126,4 +126,5 @@ async function startParser(){
         });
     })
 }
-startParser();
+
+module.exports.start = startParser();

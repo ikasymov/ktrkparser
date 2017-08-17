@@ -1,15 +1,15 @@
 let request = require('request');
 let superagent = require('superagent');
 let fs = require('fs');
-let client = require('redis').createClient('redis://h:pd4c104be5ed6b00951dd5c0f8c7461f66790fc55dde2d58612b10a98bb2e5a20@ec2-34-230-117-175.compute-1.amazonaws.com:28789');
+let client = require('./client');
 
 function Parser(config){
     this.groupId = config.group;
     this.nambaOne = config.nambaone;
     this.parseUrl = config.parserUrl;
     this.dataName = config.dataName;
-    this.user = process.env.namba_user;
-    this.passport = process.env.namba_passport;
+    this.user = '996121121121';
+    this.passport = 'password112';
     this.dataForEverySecond = config.dataForSecond
 };
 

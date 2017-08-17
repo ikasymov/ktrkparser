@@ -2,8 +2,8 @@ let request = require('request');
 let xpath = require('xpath'),
     dom = require('xmldom').DOMParser;
 let sh = require('cheerio');
-let RandomParser = require('./random');
-let config = require('./config').kp;
+let RandomParser = require('../random');
+let config = require('../config').kp;
 
 
 function KpParser(config){
@@ -79,5 +79,11 @@ KpParser.prototype.start = async function(){
   }
 };
 
-let parser = new KpParser(config);
-parser.start();
+
+
+function starting(){
+    let parser = new KpParser(config);
+    parser.start();
+}
+
+module.exports.start = starting();

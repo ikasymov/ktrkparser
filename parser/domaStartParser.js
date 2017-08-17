@@ -1,11 +1,12 @@
-let Parser = require('./parser');
+let Parser = require('../parser');
 let request = require('request');
-let errors = require('./errors');
-let config = require('./config').doma;
+let errors = require('../errors');
+let config = require('../config').doma;
 let xRay = require('x-ray'),
     x = xRay();
+let async = require('async');
 let ch = require('cheerio');
-let client = require('redis').createClient('redis://h:pd4c104be5ed6b00951dd5c0f8c7461f66790fc55dde2d58612b10a98bb2e5a20@ec2-34-230-117-175.compute-1.amazonaws.com:28789');
+let client = require('../client');
 
 function DomaParser(config, url){
     Parser.apply(this, arguments);
@@ -92,6 +93,11 @@ DomaParser.prototype.start = async function(){
     }
 };
 
+function asyncStart(elem){
+    let parser = new DomaParser(config, elem);
+    return parser.start();
+}
+
 async function startParser() {
     return new Promise((resolve, reject)=>{
       x(config.parserUrl + 'retsepty', '.grid-two-column__column.grid-two-column__column_center.tags_content_pages_container',
@@ -101,9 +107,12 @@ async function startParser() {
               let list = reverseList.slice(reverseList.indexOf(value) + 1);
               if(list.length > 0){
                   client.set(config.dataName, list.slice(-1));
-                  list.forEach((elem)=>{
-                      let parser = new DomaParser(config, elem);
-                      parser.start();
+                  async.map(list, asyncStart, (error, result)=>{
+                      if(!error){
+                          resolve(result)
+                      }else{
+                          reject(error)
+                      }
                   });
                   resolve(list)
               }
@@ -112,5 +121,7 @@ async function startParser() {
       })
   })
 }
-startParser();
+
+
+module.exports.start = startParser();
 

@@ -1,12 +1,11 @@
 let request = require('request');
-let RandomParser = require('./random');
-let errors = require('./errors');
-let methods = require('./methods');
-let config = require('./config').village;
+let RandomParser = require('../random');
+let errors = require('../errors');
+let methods = require('../methods');
+let config = require('../config').village;
 let ch = require('cheerio');
 let Xray = require('x-ray');
     let x = Xray();
-let client = require('redis').createClient('redis://h:pd4c104be5ed6b00951dd5c0f8c7461f66790fc55dde2d58612b10a98bb2e5a20@ec2-34-230-117-175.compute-1.amazonaws.com:28789');
 
 
 function VillageParser(config){
@@ -71,6 +70,10 @@ VillageParser.prototype.getArticleImages = async function(){
   return false
 };
 
-let parser = new VillageParser(config);
+function starting(){
+    let parser = new VillageParser(config);
 
-parser.everySecond();
+    parser.everySecond();
+}
+
+module.exports.start = starting();

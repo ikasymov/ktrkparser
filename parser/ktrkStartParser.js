@@ -3,14 +3,14 @@ let request = require('request');
 let ch = require('cheerio');
 let fs = require('fs');
 let superagent = require('superagent');
-let methods = require('./methods');
+let methods = require('../methods');
 let xpath = require('xpath'),
     dom = require('xmldom').DOMParser;
 let range = require('range');
-let Parser = require('./parser');
-let config = require('./config').ktrk;
-let errors  = require('./errors');
-let client = require('redis').createClient('redis://h:pd4c104be5ed6b00951dd5c0f8c7461f66790fc55dde2d58612b10a98bb2e5a20@ec2-34-230-117-175.compute-1.amazonaws.com:28789');
+let Parser = require('../parser');
+let config = require('../config').ktrk;
+let errors  = require('../errors');
+let client = require('../client');
 
 let check = true;
 
@@ -154,4 +154,5 @@ function getUrl(){
     })
 };
 
-getUrl();
+
+module.exports.start = getUrl();

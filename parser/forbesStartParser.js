@@ -1,7 +1,7 @@
-let RandomParser = require('./random');
+let RandomParser = require('../random');
 let request = require('request');
-let errors = require('./errors');
-let config = require('./config').forbes;
+let errors = require('../errors');
+let config = require('../config').forbes;
 let xRay = require('x-ray'),
     x = xRay();
 
@@ -92,5 +92,10 @@ ForbesParser.prototype.start = async function(){
   }
 };
 
-let parser = new ForbesParser(config);
-parser.start();
+
+
+function starting(){
+    let parser = new ForbesParser(config);
+    parser.start();
+}
+module.exports.start = starting();
