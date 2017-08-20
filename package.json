@@ -20,6 +20,7 @@
     "glob": "^7.1.2",
     "html-to-text": "^3.3.0",
     "http-get": "^0.5.10",
+    "image-downloader": "^3.2.2",
     "morgan": "~1.8.1",
     "mysql": "^2.14.1",
     "mysql2": "^1.4.1",

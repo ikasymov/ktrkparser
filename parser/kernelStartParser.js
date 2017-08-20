@@ -3,10 +3,9 @@ let request = require('request');
 let errors = require('../errors');
 let methods = require('../methods');
 let config = require('../config').kernel;
-let ch = require('cheerio');
 let Xray = require('x-ray');
 let x = Xray();
-let client = require('../client');
+let db = require('../models');
 
 function KernelParser(config, url, img){
     Parser.apply(this, arguments);
@@ -59,7 +58,7 @@ KernelParser.prototype.getArticleImages = async function(){
         }
         return tokens
     }catch(e){
-        console.log(e)
+        return e
     }
 };
 
@@ -87,44 +86,64 @@ KernelParser.prototype.getArticleBody = async function(){
 };
 
 KernelParser.prototype.start = async function(){
-    let html = await this._generateHtml();
-    let text = await this.getArticleBody();
-    let statusCode = await this._sendArticle(this._url);
-    console.log(statusCode)
+    try{
+        let html = await this._generateHtml();
+        let text = await this.getArticleBody();
+        return this._sendArticle(this._url);
+    }catch(e){
+        return e
+    }
 };
 
 async function startParser(){
-    x('http://kernel.net.kg/?paged=1', '#main', {
-        href: x('.more-link-wrapper', ['a@href']),
-        image: x('.entry-wrapper .entry-image-wrapper', ['.post-thumbnail img@data-large-file'])
-    })((error, objectList)=>{
-        if(error){
-            console.log(error)
-        }
-        let lastObject = '';
-        let img = objectList.image.filter((elem)=>{
-            if(elem !== lastObject){
-                lastObject = elem;
-                return elem
+    let objectList = await new Promise((resolve, reject)=>{
+        x('http://kernel.net.kg/?paged=1', '#main', {
+            href: x('.more-link-wrapper', ['a@href']),
+            image: x('.entry-wrapper .entry-image-wrapper', ['.post-thumbnail img@data-large-file'])
+        })((error, objectList)=>{
+            if(error){
+                reject(error)
             }
-            lastObject = elem;
-        }).reverse();
-        let reverseList = objectList.href;
-        client.get(config.dataName, (error, value)=>{
-            let list = reverseList.slice(reverseList.indexOf(value) + 1);
-            if(list.length > 0){
-                client.set(config.dataName, list.slice(-1));
-                for(let i in list){
-                    let url = reverseList[i];
-                    let image = img[i];
-                    let parser = new KernelParser(config, url, image);
-                    parser.start();
-                }
-            }else{
-                console.log('not list')
-            }
+            resolve(objectList)
         });
-    })
+    });
+
+    let lastObject = '';
+    let img = objectList.image.filter((elem)=>{
+        if(elem !== lastObject){
+            lastObject = elem;
+            return elem
+        }
+        lastObject = elem;
+    }).reverse();
+    let reverseList = objectList.href;
+    let value = await db.Parser.findOrCreate({
+        where:{
+            key: config.dataName
+        },
+        defaults: {
+            key: config.dataName,
+            value: reverseList[0]
+        }
+    });
+    let list = reverseList.slice(reverseList.indexOf(value[0].value) + 1);
+    if(list.length > 0){
+        for(let i in list){
+            let url = reverseList[i];
+            let image = img[i];
+            let parser = new KernelParser(config, url, image);
+            let result = await parser.start();
+            console.log(result)
+        }
+        await value[0].update({value: list.slice(-1)[0]});
+        return 'OK'
+    }else{
+        return new Error('not list')
+    }
 }
 
-module.exports.start = startParser();
+startParser().then(result=>{
+    process.exit();
+}).catch(e=>{
+    console.log(e)
+})

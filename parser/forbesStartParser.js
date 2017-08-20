@@ -94,8 +94,9 @@ ForbesParser.prototype.start = async function(){
 
 
 
-function starting(){
-    let parser = new ForbesParser(config);
-    parser.start();
-}
-module.exports.start = starting();
+let parser = new ForbesParser(config);
+parser.start().then(result=>{
+    process.exit()
+}).catch(e=>{
+    console.log(e)
+})

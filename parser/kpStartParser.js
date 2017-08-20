@@ -14,10 +14,11 @@ KpParser.prototype = Object.create(RandomParser.prototype);
 KpParser.prototype.constructor = KpParser;
 
 KpParser.prototype.getArticleImages = async function(){
-    let doc = await this._doc();
-    let imageHtml = xpath.select('//*[@id="bodyArticleJS"]/header/div[4]/div/img', doc).toString();
-    let $ = sh.load(imageHtml);
+
     try {
+        let doc = await this._doc();
+        let imageHtml = xpath.select('//*[@id="bodyArticleJS"]/header/div[4]/div/img', doc).toString();
+        let $ = sh.load(imageHtml);
         let imgUrl = 'http:' + $('img')[0].attribs.src;
         return [await this._saveImageByUrl(imgUrl)]
     }catch (error){
@@ -27,21 +28,30 @@ KpParser.prototype.getArticleImages = async function(){
 };
 
 KpParser.prototype.getArticleTheme = async function(){
-    let doc = await this._doc();
-    let head = xpath.select('//*[@id="bodyArticleJS"]/header', doc).toString();
-    let $ = sh.load(head);
-    return $('h1').text();
+    try{
+        let doc = await this._doc();
+        let head = xpath.select('//*[@id="bodyArticleJS"]/header', doc).toString();
+        let $ = sh.load(head);
+        return $('h1').text();
+    }catch(e){
+        return e
+    }
+
 };
 
 KpParser.prototype.getArticleBody = async function(){
-    let doc = await this._doc();
-    let articleBodyHtml = xpath.select('//*[@id="hypercontext"]', doc).toString();
-    let $ = sh.load(articleBodyHtml);
-    let text = '';
-    $('p').slice(0).each(function (i, element) {
-        text += $(this).text();
-    });
-    return text;
+    try{
+        let doc = await this._doc();
+        let articleBodyHtml = xpath.select('//*[@id="hypercontext"]', doc).toString();
+        let $ = sh.load(articleBodyHtml);
+        let text = '';
+        $('p').slice(0).each(function (i, element) {
+            text += $(this).text();
+        });
+        return text;
+    }catch(e){
+        return e
+    }
 };
 
 KpParser.prototype._urls = async function(){
@@ -69,21 +79,24 @@ KpParser.prototype.start = async function(){
   try{
       let url = await this._generateRandomUrl(config);
       let html = await this._getHtmlForParse();
-
       if(url && html){
-          let resultCode = await this._sendArticle(this._randomUrl);
-          console.log(resultCode)
+          return this._sendArticle(this._randomUrl);
       }
   }catch(e){
-      console.log(e.message)
+      return e
   }
 };
 
 
 
-function starting(){
+async function starting(){
     let parser = new KpParser(config);
-    parser.start();
+    return parser.start();
 }
 
-module.exports.start = starting();
+starting().then(result=>{
+    console.log(result)
+    process.exit()
+}).catch(e=>{
+    console.log(e)
+})

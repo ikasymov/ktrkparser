@@ -6,7 +6,7 @@ let xRay = require('x-ray'),
     x = xRay();
 let async = require('async');
 let ch = require('cheerio');
-let client = require('../client');
+let db = require('../models');
 
 function DomaParser(config, url){
     Parser.apply(this, arguments);
@@ -42,14 +42,18 @@ DomaParser.prototype.listOfImgUrl = async function(){
     let html = this._html;
     let $ = ch.load(html);
     let body = $("*[itemprop = 'recipeInstructions']").get(0);
-    let imgTokenList = [];
-    x($(body).html(), ['.content-box .field-row img@data-original'])((error, text)=>{
-        text.filter(filterArray).forEach((elem)=>{
-
-            imgTokenList.push(this.parseUrl.slice(0, -1) + elem)
-        })
+    return new Promise((resolve, reject)=>{
+        x($(body).html(), ['.content-box .field-row img@data-original'])((error, text)=>{
+            let imgTokenList = [];
+            text.filter(filterArray).forEach((elem)=>{
+                if(error){
+                    reject(error)
+                }
+                imgTokenList.push(this.parseUrl.slice(0, -1) + elem)
+            });
+            resolve(imgTokenList)
+        });
     });
-    return imgTokenList
 };
 DomaParser.prototype.getArticleTheme = async function(){
   return new Promise((resolve, reject)=>{
@@ -63,65 +67,84 @@ DomaParser.prototype.getArticleTheme = async function(){
 };
 
 DomaParser.prototype.getArticleImages = async function(){
-    let urls = await this.listOfImgUrl();
-    let token = [];
-    for(let i in urls){
-        token.push(await this._saveImageByUrl(urls[i]))
+    try{
+        let urls = await this.listOfImgUrl();
+        let token = [];
+        for(let i in urls){
+            token.push(await this._saveImageByUrl(urls[i]))
+        }
+        return token
+    }catch(e){
+        return e
     }
-    return token
 };
 
 DomaParser.prototype.getArticleBody = async function(){
     let html = this._html;
-    return new Promise((resolve, reject)=>{
-        let $ = ch.load(html)
+    try{
+        let $ = ch.load(html);
         let domElem = $("*[itemprop = 'description']").get(0);
         let content = $(domElem).text().trim();
         let body = $("*[itemprop = 'recipeInstructions']").get(0);
         x($(body).html(), ['.content-box .plain-text'])((error, text)=>{
             content += '\r\n' + text.join('\r\n\r\n');
         });
-        resolve(content)
-    });
-};
-
-DomaParser.prototype.start = async function(){
-    let html = await this._generateHtml();
-    if(html){
-        let statusCode = await this._sendArticle(this._url);
-        console.log(statusCode)
+        return content
+    }catch(e){
+        return e
     }
 };
 
-function asyncStart(elem){
-    let parser = new DomaParser(config, elem);
-    return parser.start();
-}
+DomaParser.prototype.start = async function(){
+    try{
+        let html = await this._generateHtml();
+        if(html){
+            return this._sendArticle(this._url);
+        }
+    }catch(e) {
+        return e
+    }
+};
+
 
 async function startParser() {
-    return new Promise((resolve, reject)=>{
-      x(config.parserUrl + 'retsepty', '.grid-two-column__column.grid-two-column__column_center.tags_content_pages_container',
-          ['.card-container .card .card__content .card__description  a@href'])((error, list)=>{
-          let reverseList = list.reverse();
-          client.get(config.dataName, (error, value)=>{
-              let list = reverseList.slice(reverseList.indexOf(value) + 1);
-              if(list.length > 0){
-                  client.set(config.dataName, list.slice(-1));
-                  async.map(list, asyncStart, (error, result)=>{
-                      if(!error){
-                          resolve(result)
-                      }else{
-                          reject(error)
-                      }
-                  });
-                  resolve(list)
-              }
-              reject(new Error('Not list'))
-          });
-      })
-  })
+    let list = await new Promise((resolve, reject)=>{
+        x(config.parserUrl + 'retsepty', '.grid-two-column__column.grid-two-column__column_center.tags_content_pages_container',
+            ['.card-container .card .card__content .card__description  a@href'])((error, list)=>{
+                resolve(list)
+        })
+    });
+    let reverseList = list.reverse();
+    let value = await db.Parser.findOrCreate({
+        where: {
+            key: config.dataName
+        },
+        defaults: {
+            key:config.dataName,
+            value: reverseList[0]
+        }
+    });
+
+    let parseList = reverseList.slice(reverseList.indexOf(value[0].value) + 1);
+    if(parseList.length > 0){
+        for (let i in list){
+            let elem = list[i];
+            let parser = new DomaParser(config, elem);
+            let result = await parser.start();
+            console.log(result)
+        }
+        await value[0].update({value:parseList.slice(-1)[0]})
+        return 'OK'
+    }else{
+        return 'not list'
+    }
 }
 
 
-module.exports.start = startParser();
+startParser().then(result=>{
+    console.log(result);
+    process.exit();
+}).catch(error=>{
+    console.log(error)
+})
 

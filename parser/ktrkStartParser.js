@@ -4,19 +4,43 @@ let ch = require('cheerio');
 let fs = require('fs');
 let superagent = require('superagent');
 let methods = require('../methods');
-let xpath = require('xpath'),
-    dom = require('xmldom').DOMParser;
 let range = require('range');
 let Parser = require('../parser');
 let config = require('../config').ktrk;
+var Xray = require('x-ray');
+var x = Xray();
 let errors  = require('../errors');
-let client = require('../client');
+let db = require('../models');
 
 let check = true;
 
+async function getDateTime() {
+
+    let date = new Date();
+
+    let hour = date.getHours();
+    hour = (hour < 10 ? "0" : "") + hour;
+
+    let min  = date.getMinutes();
+    min = (min < 10 ? "0" : "") + min;
+
+    let sec  = date.getSeconds();
+    sec = (sec < 10 ? "0" : "") + sec;
+
+    let year = date.getFullYear();
+
+    let month = date.getMonth() + 1;
+    month = (month < 10 ? "0" : "") + month;
+
+    let day  = date.getDate();
+    day = (day < 10 ? "0" : "") + day;
+    let dash = '-';
+    return year + dash + month + dash + day;
+
+};
+
 function KtrkParser(config, language, value){
     Parser.apply(this, arguments);
-    this.language = arguments[1];
     this.value = arguments[2];
 }
 
@@ -25,9 +49,8 @@ KtrkParser.prototype.constructor = KtrkParser;
 
 
 KtrkParser.prototype._doc = async function(){
-    this.url = this.parseUrl + 'post/' + this.value +'/' + this.language;
     let data = {
-        url: this.url,
+        url: this.value,
         method: 'GET'
     };
     return new Promise((resolve, reject)=>{
@@ -76,9 +99,8 @@ KtrkParser.prototype.getArticleTheme = async function(){
 
 
 KtrkParser.prototype.start = async function(){
-    let url = this.parseUrl + 'post/' + this.value +'/' + this.language;
     try{
-        let resultCode = await this._sendArticle(url);
+        let resultCode = await this._sendArticle(this.value);
 
         console.log(resultCode)
     }catch(e){
@@ -93,66 +115,70 @@ KtrkParser.prototype.start = async function(){
 };
 
 
-async function getParseUrls(lastPost){
-    client.get(config.dataName, (error, value)=>{
-        console.log(lastPost + 'last post');
-        if(lastPost !== value){
-            let randomValue = methods.random(range.range(parseInt(value), parseInt(lastPost) + 1).slice(0, -1));
-            let ruParser = new KtrkParser(config.ktrkRu, 'ru', randomValue);
-            let kgParser = new KtrkParser(config.ktrkKg, 'kg', randomValue);
-            ruParser.start();
-            kgParser.start();
-            client.set(config.dataName, randomValue + 1);
-            client.set(config.dataName4, randomValue + 1);
-        }else{
-            console.log(error || 'Not random')
-        }
-        client.set(config.dataName2, !check);
-    })
-}
 
-let checkCount = 0;
-function getUrl(){
-    client.get(config.dataName4, (error, value)=>{
-        console.log('data4Value '+ value)
-            if (check) {
-                let data = {
-                    url: config.ktrkRu.parserUrl + 'post/' + value + '/ru',
-                    method: 'GET'
-                };
-                request(data, (error, req, body) => {
-                    if (error || req.statusCode === 404) {
-                        if(checkCount === 3){
-                            check = false;
-                            console.log('stop');
-                            client.set(config.dataName4, parseInt(value) - 3, (error)=>{
-                                if(!error){
-                                    getUrl()
-                                }
-                            });
-                        }else{
-                            console.log('not stop');
-                            client.set(config.dataName4, parseInt(value) + 1, (error)=>{
-                                if(!error){
-                                    getUrl();
-                                }
-                            });
-                        }
-                        checkCount ++;
-                    } else {
-                        console.log('not 404');
-                        client.set(config.dataName4, parseInt(value) + 1, (error) => {
-                            if (!error) {
-                                getUrl();
-                            }
-                        });
-                    }
-                })
-            } else {
-                getParseUrls(value)
-            }
-    })
+async function getUrl(language, dataName){
+    let cookieJar = request.jar();
+    let date = await getDateTime();
+    let data = {
+        url: 'http://www.ktrk.kg/locale/' + language,
+        method: 'GET',
+        jar: cookieJar
+    };
+    let list = await new Promise((resolve, reject)=>{
+        request(data, (error, req, body)=>{
+            let dataforlanguage = {
+                url: 'http://www.ktrk.kg/posts/general/date?d=2017-08-17',
+                method: 'GET',
+                jar: cookieJar
+            };
+            request(dataforlanguage, (error, req, body)=>{
+                x(body, '.section.article-section .section-body', ['.categories a.post-title@href'])((error, list)=>{
+                    resolve(list)
+                });
+            })
+
+        });
+    });
+    let value = await db.Parser.findOrCreate({
+        where:{
+            key: dataName
+        },
+        defaults: {
+            key: dataName,
+            value: list.join('|')
+        }
+    });
+    if(value[1]){
+        return value[0].value.split('|')
+    }
+    let oldList = value[0].value.split('|');
+    let filterList = list.filter((elem)=>{
+        if(oldList.indexOf(elem) === -1){
+            return elem
+        }
+    });
+    await value[0].update({value: list.join('|')});
+    return filterList
+
 };
 
 
-module.exports.start = getUrl();
+async function getParseUrls(){
+    let listRu = await getUrl('ru', config.ktrkRu.dataName);
+    let listKg = await getUrl('kg', config.ktrkKg.dataName);
+    for(let i in listRu){
+        let elem = listRu[i];
+        let ruParser = new KtrkParser(config.ktrkRu, 'ru', elem);
+        await ruParser.start();
+    }
+    for(let i in listKg){
+        let elem = listKg[i];
+        let kgParser = new KtrkParser(config.ktrkKg, 'kg', elem);
+        await kgParser.start();
+    }
+    return 'OK'
+}
+getParseUrls().then(result=>{
+    console.log(result);
+    process.exit()
+})

@@ -1,8 +1,8 @@
 let Parser = require('./parser');
 let methods = require('./methods');
-let client = require('./client');
 let request = require('request');
 let errors = require('./errors');
+let db = require('./models');
 
 function RandomParser(config){
     Parser.apply(this, arguments)
@@ -16,19 +16,24 @@ RandomParser.prototype.constructor = RandomParser;
 RandomParser.prototype._generateRandomUrl = async function(config){
     let url = await this._urls();
     let reverseUrl = url.reverse();
-    return new Promise((resolve, reject)=>{
-        client.get(this.dataName, (error, value)=>{
-            let sliceListAfterLastNews = reverseUrl.slice(reverseUrl.indexOf(value) + 1);
-            if(sliceListAfterLastNews.length  > 0){
-                let randomUrl = methods.random(sliceListAfterLastNews);
-                client.set(config.dataName, randomUrl);
-                this._randomUrl = randomUrl;
-                resolve(true)
-            }else{
-                resolve(false)
-            }
-        });
+    let value = await db.Parser.findOrCreate({
+        where: {
+            key: config.dataName
+        },
+        defaults: {
+            key: config.dataName,
+            value: reverseUrl[0]
+        }
     });
+    let sliceListAfterLastNews = reverseUrl.slice(reverseUrl.indexOf(value[0].value) + 1);
+    if(sliceListAfterLastNews.length  > 0){
+        let randomUrl = methods.random(sliceListAfterLastNews);
+        this._randomUrl = randomUrl;
+        await value[0].update({value: randomUrl});
+        return true
+    }else{
+        return false
+    }
 };
 
 RandomParser.prototype._getHtmlForParse = async function(){

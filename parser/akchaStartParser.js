@@ -8,7 +8,7 @@ const Xray = require('x-ray');
 const x = Xray();
 let cron = require('node-cron');
 let async = require('async');
-const client = require('../client');
+let db = require('../models');
 
 function AkchaParser(config, url){
     Parser.apply(this, arguments);
@@ -71,45 +71,63 @@ AkchaParser.prototype.getImgUrl = async function(){
 };
 
 AkchaParser.prototype.getArticleImages = async function(){
-    const url = await this.getImgUrl();
-    return [await this._saveImageByUrl(url)];
+    try{
+        const url = await this.getImgUrl();
+        return [await this._saveImageByUrl(url)];
+    }catch(e){
+        return e
+    }
 };
 
 
 AkchaParser.prototype.start = async function(){
-    const html = await this._generateHtml();
-    const statusCode = await this._sendArticle(this._url);
-    console.log(statusCode)
+    try{
+        const html = await this._generateHtml();
+        return this._sendArticle(this._url);
+    }catch(e){
+        return e
+    }
 };
 
-function asyncStart(elem){
-    let parser = new AkchaParser(config, elem);
-    return parser.start();
-}
 
 async function getUrlsAndStartParser(){
-    return new Promise((resolve, reject)=>{
+    let list = await new Promise((resolve, reject)=>{
         x(config.parserUrl, '.col-md-6.content_news_list', ['.news_list_wrapper a@href'])((error, list)=>{
-            let reverseList = list.reverse();
-            client.get(config.dataName, (error, value)=>{
-                let list = reverseList.slice(reverseList.indexOf(value) + 1);
-                if(list.length > 0){
-                    client.set(config.dataName, list.slice(-1));
-                    async.map(list, asyncStart, (error, result)=>{
-                        if(!error){
-                            resolve(result)
-                        }else{
-                            reject(error)
-                        }
-                    });
-                }
-                reject(new Error('Not list'))
-            });
+            resolve(list)
         })
     });
+    try{
+        let reverseList = list.reverse();
+        let value = await db.Parser.findOrCreate({
+            where: {
+                key: config.dataName
+            },
+            defaults: {
+                key: config.dataName,
+                value: reverseList[0]
+            }
+
+        });
+        let parseList = reverseList.slice(reverseList.indexOf(value[0].value) + 1);
+        if(parseList.length > 0){
+            for (let i  in parseList){
+                let elem = parseList[i];
+                let parser = new AkchaParser(config, elem);
+                let result = await parser.start();
+                console.log(result)
+            }
+            await value[0].update({value: parseList.slice(-1)[0]});
+            return 'OK'
+        }
+        console.log('Not List')
+    }catch(e){
+        return e
+    }
+
 }
 
-module.exports.start = getUrlsAndStartParser();
-
-
-module.exports.client = client;
+getUrlsAndStartParser().then(result=>{
+    process.exit();
+}).catch(e=>{
+    console.log(e)
+});

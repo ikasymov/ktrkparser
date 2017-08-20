@@ -7,21 +7,17 @@ module.exports = {
         dataForSecond: 'rbcCheckSecond'
     },
     ktrk: {
-        dataName: 'test_ktrk_list',
-        dataName2: 'test_ktrk_check',
-        dataName3: 'test_ktrk_checkCount',
-        dataName4: 'test_ktrk_getUrl',
         ktrkRu: {
             group: 1144,
             nambaone: 'https://api.namba1.co',
             parserUrl: 'http://www.ktrk.kg/',
-            dataName: 'test_ktrk_list',
+            dataName: 'test_ktrk_list_kg',
             dataForSecond: 'ktrkCheckSecondRu'
         },
         ktrkKg: {
             group: 1143,
             nambaone: 'https://api.namba1.co',
-            dataName: 'test_ktrk_list',
+            dataName: 'test_ktrk_list_ru',
             parserUrl: 'http://www.ktrk.kg/',
             dataForSecond: 'ktrkCheckSecondKg'
         }

@@ -52,17 +52,21 @@ VillageParser.prototype.getArticleTheme = async function(){
 };
 
 VillageParser.prototype.start = async function(){
-    let url = await this._generateRandomUrl(config);
-    let html = await this._getHtmlForParse();
     try{
-        if(url && html){
-            let statusCode = await this._sendArticle(this._randomUrl);
-            console.log(statusCode)
-        }else{
-            console.log('not random')
+        let url = await this._generateRandomUrl(config);
+        let html = await this._getHtmlForParse();
+        try{
+            if(url && html){
+                let statusCode = await this._sendArticle(this._randomUrl);
+                console.log(statusCode)
+            }else{
+                console.log('not random')
+            }
+        }catch(e){
+            console.log(e.message)
         }
     }catch(e){
-        console.log(e.message)
+        console.log(e)
     }
 };
 
@@ -73,7 +77,8 @@ VillageParser.prototype.getArticleImages = async function(){
 function starting(){
     let parser = new VillageParser(config);
 
-    parser.everySecond();
+    parser.start().then(result=>{
+        process.exit()
+    })
 }
-
-module.exports.start = starting();
+starting()

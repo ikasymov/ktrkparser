@@ -8,7 +8,7 @@ let fs = require('fs');
 let config = require('../config').rbk;
 let Parser = require('../parser');
 let errors = require('../errors');
-let client = require('../client');
+let db = require('../models');
 
 function RBCParser(config){
     Parser.apply(this, arguments);
@@ -20,9 +20,18 @@ RBCParser.prototype.constructor = RBCParser;
 
 RBCParser.prototype.start = async function () {
     try{
-        this._randomUrl = await this._generateRandom();
-        client.set(this.dataName, await this._randomUrl);
-        if(await this._randomUrl){
+        this._randomUrl =  await this._generateRandom();
+        let value = await db.Parser.findOrCreate({
+            where:{
+                key: this.dataName
+            },
+            defaults: {
+                key: this.dataName,
+                value: this._randomUrl
+            }
+        });
+        await value[0].update({value: this._randomUrl});
+        if(this._randomUrl){
             let resultCode = await this._sendArticle(this._randomUrl);
             console.log(resultCode)
         }
@@ -41,20 +50,28 @@ RBCParser.prototype.start = async function () {
 Not calling another place
  */
 RBCParser.prototype._generateRandom = async function () {
-    let urls = await this._urls();
-    return new Promise((resolve, rejected)=>{
-        client.get(this.dataName, function(error, value){
-            if(!error){
-                let before = urls.indexOf(value);
-                let divideList = urls.slice(0, before);
-                if(divideList.length > 0){
-                    resolve(methods.random(divideList))
-                }else{
-                    rejected(new Error('Not random List'));
-                }
+    try{
+        let urls = await this._urls();
+        let value = await db.Parser.findOrCreate({
+            where: {
+                key: this.dataName
+            },
+            defaults: {
+                key: this.dataName,
+                value: urls[0]
             }
         });
-    });
+        let before = urls.indexOf(value[0].value);
+        let divideList = urls.slice(0, before);
+        if(divideList.length > 0){
+            return methods.random(divideList)
+        }else{
+            throw new Error('not list')
+        }
+    }catch(e){
+        throw e
+    }
+
 };
 
 RBCParser.prototype._doc = async function(){
@@ -82,7 +99,7 @@ RBCParser.prototype._urls = async function(){
         };
         request(data, function(error, req, body){
             if (error || req.statusCode === 404){
-                rejected(error || new errors.PageNotFound('KTRK'));
+                rejected(error || new errors.PageNotFound('RBC'));
             }else{
                 let doc = new dom().parseFromString(body);
                 let leftSideBarHtml = xpath.select('/html/body/div[8]/div/div[2]/div[1]/div/div/div/div/div[2]/div', doc).toString();
@@ -90,6 +107,7 @@ RBCParser.prototype._urls = async function(){
                 let urls = $('a').map(function (i, elem) {
                     return [$(this).attr('href')];
                 }).get();
+                console.log(urls)
                 resolve(urls);
             }
         });
@@ -98,48 +116,59 @@ RBCParser.prototype._urls = async function(){
 
 
 RBCParser.prototype.getArticleImages = async function(){
-    let doc = await this._doc();
-    let imageHtml = xpath.select('/html/body/div[8]', doc).toString();
-    let $ = sh.load(imageHtml);
-    let imgUrls = '';
-    $('div').each(function(i, elem){
-        if($(this).attr('class') === 'article__main-image__link'){
-            imgUrls += $(this).children('img')[0].attribs.src;
+    try{
+        let doc = await this._doc();
+        let imageHtml = xpath.select('/html/body/div[8]', doc).toString();
+        let $ = sh.load(imageHtml);
+        let imgUrls = '';
+        $('div').each(function(i, elem){
+            if($(this).attr('class') === 'article__main-image__link'){
+                imgUrls += $(this).children('img')[0].attribs.src;
+            }
+        });
+        if(imgUrls){
+            return [await this._saveImageByUrl(imgUrls)]
+        }else{
+            return false;
         }
-    });
-    if(imgUrls){
-        return [await this._saveImageByUrl(imgUrls)]
-    }else{
-        return false;
+    }catch(e){
+        return e
     }
 };
 
 RBCParser.prototype.getArticleTheme = async function(){
-    let doc = await this._doc();
-    let titleHtml = xpath.select('/html/body/div[8]', doc).toString();
-    let $ = sh.load(titleHtml);
-    return $('div').filter('.article__header__title').children('span').text();
+    try{
+        let doc = await this._doc();
+        let titleHtml = xpath.select('/html/body/div[8]', doc).toString();
+        let $ = sh.load(titleHtml);
+        return $('div').filter('.article__header__title').children('span').text();
+    }catch(e){
+        return e
+    }
 };
 
 RBCParser.prototype.getArticleBody = async function(){
-    let doc = await this._doc();
-    let bodyHtml = xpath.select("/html/body/div[8]", doc).toString();
-    let $ = sh.load(bodyHtml);
-    let text = '';
-    $('div').each(function(i, elem){
-        if($(this).attr('class') === 'article__text'){
-            $('p').slice(0).each(function (i, element) {
-                text += $(this).text().replace(methods.regex, '') + '\r\n\r\n';
-            });
-        }
-    });
-    return text;
+    try{
+        let doc = await this._doc();
+        let bodyHtml = xpath.select("/html/body/div[8]", doc).toString();
+        let $ = sh.load(bodyHtml);
+        let text = '';
+        $('div').each(function(i, elem){
+            if($(this).attr('class') === 'article__text'){
+                $('p').slice(0).each(function (i, element) {
+                    text += $(this).text().replace(methods.regex, '') + '\r\n\r\n';
+                });
+            }
+        });
+        return text;
+    }catch(e){
+        return e
+    }
 };
 
 
 
-function starting(){
-    let parser = new RBCParser(config);
-    parser.everySecond();
-}
-module.exports.start = starting();
+let parser = new RBCParser(config);
+parser.start().then(result=>{
+    process.exit();
+})

@@ -1,7 +1,8 @@
 let request = require('request');
 let superagent = require('superagent');
 let fs = require('fs');
-let client = require('./client');
+let download = require('image-downloader');
+let db = require('./models');
 
 function Parser(config){
     this.groupId = config.group;
@@ -36,75 +37,119 @@ Parser.prototype.generateToken = async function(){
     });
 };
 
-Parser.prototype._saveImageByUrl = async function(imgUrl){
-    let value = Math.random();
+function deleteFile(path){
     return new Promise((resolve, reject)=>{
-        if (imgUrl){
-            request(imgUrl).pipe(fs.createWriteStream('./' + 'kp' +  value + imgUrl.slice(-4))).on('finish', function (error, req) {
-                if (error){
-                    reject(error);
-                }
-                superagent.post('https://files.namba1.co').attach('file', './' + 'kp' +  value + imgUrl.slice(-4)).end(function(err, req) {
-                    fs.unlink('./' + 'kp' +  value + imgUrl.slice(-4), function (error, value) {});
-                    resolve(req.body.file);
-                });
-            });
-        }
-        else{
-            resolve(imgUrl)
-        }
+        fs.unlink(path, function (error) {
+            if(error){
+                console.log(error);
+                reject(error)
+            }
+            console.log('File deleted');
+            resolve()
+        })
     });
+}
+
+Parser.prototype._saveImageByUrl = async function(imgUrl){
+    console.log('save image and return token')
+    let format = imgUrl.match(/\.([0-9a-z]+)(?=[?#])|(\.)(?:[\w]+)$/gmi)[0];
+    imgUrl = imgUrl.split('.').slice(0, -1).join('.') + format;
+    return new Promise((resolve, reject)=> {
+        const options = {
+            url: imgUrl,
+            dest: './'
+        };
+        download.image(options).then(({filename, image}) => {
+            console.log('download image');
+            return'./'+ filename;
+        }).then(file=>{
+            superagent.post('https://files.namba1.co').attach('file', file).end(function(err, req) {
+                console.log('send image');
+                if(err){
+                    console.log(err);
+                    deleteFile(filename);
+                    reject(err)
+                }
+                deleteFile(file).then(result=>{
+                    resolve(req.body.file)
+                }).catch(error=>{
+                    console.log(error);
+                    reject(error)
+                })
+            })
+        }).catch(e => {
+            console.log(e);
+            console.log('error download image');
+            reject(e)
+        });
+        setTimeout(()=>{
+            reject(new Error('time out'))
+        }, 10000)
+    })
 };
 
 Parser.prototype._sendArticle = async function(url){
-    let title = await this.getArticleTheme();
-    let text = await this.getArticleBody()
-    let body = text.slice(0, 155) + '.... Что бы читать дальше перейдите по ссылке\n' + url;
-    let img = await this.getArticleImages();
-    this._sendToken = await this.generateToken();
-    let dataForSend = {
-        url:  this.nambaOne + '/groups/' + this.groupId +'/post',
-        method: 'POST',
-        body: {
-            content: title + '\r\n\r\n' + body,
-            comment_enabled: 1
-        },
-        headers: {
-            'X-Namba-Auth-Token': this._sendToken,
-        },
-        json: true
-    };
-    if(img.length > 0){
-        dataForSend.body['attachments'] = [];
-        for(let i in img){
-            dataForSend.body.attachments.push({type: 'media/image', content: img[i]})
+    try{
+        let title = await this.getArticleTheme();
+        let text = await this.getArticleBody();
+        let body = text.slice(0, 155) + '.... Что бы читать дальше перейдите по ссылке\n' + url;
+        let img = await this.getArticleImages();
+        this._sendToken = await this.generateToken();
+        let dataForSend = {
+            url:  this.nambaOne + '/groups/' + this.groupId +'/post',
+            method: 'POST',
+            body: {
+                content: title + '\r\n\r\n' + body,
+                comment_enabled: 1
+            },
+            headers: {
+                'X-Namba-Auth-Token': this._sendToken,
+            },
+            json: true
         };
-    }
-    return new Promise((resolve, reject)=>{
-        request(dataForSend, function (error, req, body) {
-            if(error){
-                reject(error);
+        if(img.length > 0){
+            dataForSend.body['attachments'] = [];
+            for(let i in img){
+                dataForSend.body.attachments.push({type: 'media/image', content: img[i]})
             }
-            resolve(req.statusCode)
-        });
-    });
+        }
+        return new Promise((resolve, reject)=>{
+            request(dataForSend, function (error, req, body) {
+                if(error){
+                    reject(error);
+                }
+                resolve(req.statusCode)
+            });
+        }).catch(e=>{
+            return e
+        })
+    }catch(e){
+        return e
+    }
 };
 
-Parser.prototype.everySecond = function () {
-    client.get(this.dataForEverySecond, (error, value)=>{
-        let current = parseInt(value);
-        let dict = {
-            0: true,
-            1: false
-        };
-        if(dict[current]){
-            this.start();
-            client.set(this.dataForEverySecond, 1)
-        }else{
-            console.log('false');
-            client.set(this.dataForEverySecond, 0)
+Parser.prototype.everySecond = async function () {
+    let value = await db.Parser.findOrCreate({
+        where: {
+            key: this.dataForEverySecond
+        },
+        defaults: {
+            key: this.dataForEverySecond,
+            value: 0
         }
-    })
+    });
+    let current = parseInt(value[0].value);
+    let dict = {
+        0: true,
+        1: false
+    };
+    if(dict[current]){
+        await this.start();
+        value[0].update({value: 1})
+    }else{
+        console.log('false');
+        value[0].update({value: 0})
+    }
 };
 
 module.exports = Parser;
