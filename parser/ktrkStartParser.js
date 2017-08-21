@@ -127,7 +127,7 @@ async function getUrl(language, dataName){
     let list = await new Promise((resolve, reject)=>{
         request(data, (error, req, body)=>{
             let dataforlanguage = {
-                url: 'http://www.ktrk.kg/posts/general/date?d=2017-08-17',
+                url: 'http://www.ktrk.kg/posts/general/date?d=' + date,
                 method: 'GET',
                 jar: cookieJar
             };
