@@ -3,14 +3,15 @@ let superagent = require('superagent');
 let fs = require('fs');
 let download = require('image-downloader');
 let db = require('./models');
+let userConfig = require('./user_config');
 
 function Parser(config){
     this.groupId = config.group;
     this.nambaOne = config.nambaone;
     this.parseUrl = config.parserUrl;
     this.dataName = config.dataName;
-    this.user = '996121121121';
-    this.passport = 'password112';
+    this.user = userConfig.user;
+    this.passport = userConfig.password;
     this.dataForEverySecond = config.dataForSecond
 };
 
