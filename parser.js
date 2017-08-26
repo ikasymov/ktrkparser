@@ -92,31 +92,35 @@ Parser.prototype._saveImageByUrl = async function(imgUrl){
 Parser.prototype._sendArticle = async function(url){
     try{
         let title = await this.getArticleTheme();
-        title += '\n' + url;
-        this._sendToken = await this.generateToken();
-        let dataForSend = {
-            url:  this.nambaOne + '/groups/' + this.groupId +'/post',
-            method: 'POST',
-            body: {
-                content: title,
-                comment_enabled: 1
-            },
-            headers: {
-                'X-Namba-Auth-Token': this._sendToken,
-            },
-            json: true
-        };
+        if(title.trim()){
+            title += '\n' + url;
+            this._sendToken = await this.generateToken();
+            let dataForSend = {
+                url:  this.nambaOne + '/groups/' + this.groupId +'/post',
+                method: 'POST',
+                body: {
+                    content: title,
+                    comment_enabled: 1
+                },
+                headers: {
+                    'X-Namba-Auth-Token': this._sendToken,
+                },
+                json: true
+            };
 
-        return new Promise((resolve, reject)=>{
-            request(dataForSend, function (error, req, body) {
-                if(error){
-                    reject(error);
-                }
-                resolve(req.statusCode)
-            });
-        }).catch(e=>{
-            return e
-        })
+            return new Promise((resolve, reject)=>{
+                request(dataForSend, function (error, req, body) {
+                    if(error){
+                        reject(error);
+                    }
+                    resolve(req.statusCode)
+                });
+            }).catch(e=>{
+                return e
+            })
+        }else{
+            throw new Error('Not title')
+        }
     }catch(e){
         return e
     }
