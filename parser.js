@@ -92,15 +92,13 @@ Parser.prototype._saveImageByUrl = async function(imgUrl){
 Parser.prototype._sendArticle = async function(url){
     try{
         let title = await this.getArticleTheme();
-        let text = await this.getArticleBody();
-        let body = text.slice(0, 155) + '.... Что бы читать дальше перейдите по ссылке\n' + url;
-        let img = await this.getArticleImages();
+        title += '\n' + url;
         this._sendToken = await this.generateToken();
         let dataForSend = {
             url:  this.nambaOne + '/groups/' + this.groupId +'/post',
             method: 'POST',
             body: {
-                content: title + '\r\n\r\n' + body,
+                content: title,
                 comment_enabled: 1
             },
             headers: {
@@ -108,12 +106,7 @@ Parser.prototype._sendArticle = async function(url){
             },
             json: true
         };
-        if(img.length > 0){
-            dataForSend.body['attachments'] = [];
-            for(let i in img){
-                dataForSend.body.attachments.push({type: 'media/image', content: img[i]})
-            }
-        }
+
         return new Promise((resolve, reject)=>{
             request(dataForSend, function (error, req, body) {
                 if(error){

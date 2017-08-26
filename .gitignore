@@ -2,3 +2,4 @@ node_modules
 .idea
 updateDate.js
 test.js
+user_config.js
