@@ -71,6 +71,52 @@ KtrkParser.prototype.getArticleImages = async function(){
     return [await this._saveImageByUrl((url ? url: false))]
 };
 
+Parser.prototype._sendArticle = async function(url){
+  try{
+    let title = await this.getArticleTheme();
+    let img = await this.getArticleImages();
+    let body = await this.getArticleBody();
+    if(title.trim()){
+      title += '\n' + body;
+      this._sendToken = await this.generateToken();
+      let dataForSend = {
+        url:  this.nambaOne + '/groups/' + this.groupId +'/post',
+        method: 'POST',
+        body: {
+          content: title,
+          comment_enabled: 1
+        },
+        headers: {
+          'X-Namba-Auth-Token': this._sendToken,
+        },
+        json: true
+      };
+      if(img){
+        dataForSend.body['attachments'] = [{
+          type: 'media/image',
+          content: img
+        }];
+      }
+      return new Promise((resolve, reject)=>{
+        request(dataForSend, function (error, req, body) {
+          if(error){
+            reject(error);
+          }
+          resolve(req.statusCode)
+        });
+      }).catch(e=>{
+        return e
+      })
+    }else{
+      throw new Error('Not title')
+    }
+  }catch(e){
+    return e
+  }
+};
+
+
+
 KtrkParser.prototype.getArticleBody = async function(){
     let doc = await this._doc();
     let $ = ch.load(doc);
@@ -98,8 +144,11 @@ KtrkParser.prototype.getArticleTheme = async function(){
 };
 
 
+
+
 KtrkParser.prototype.start = async function(){
     try{
+        this.ktrk_check = true;
         let resultCode = await this._sendArticle(this.value);
 
         console.log(resultCode)
