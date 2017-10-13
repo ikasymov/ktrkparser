@@ -5,6 +5,9 @@ let sh = require('cheerio');
 let RandomParser = require('../random');
 let config = require('../config').kp;
 
+let Handler = require('../handlerSteps');
+let send = require('../send')
+
 
 function KpParser(config){
     RandomParser.apply(this, arguments);
@@ -87,16 +90,40 @@ KpParser.prototype.start = async function(){
   }
 };
 
-
-
-async function starting(){
-    let parser = new KpParser(config);
-    return parser.start();
+async function getUrlList(){
+  let data = {
+    url: config.parserUrl,
+    method: 'GET'
+  };
+  return new Promise((resolve, reject)=>{
+    request(data, (error, req, body)=>{
+      let doc = new dom().parseFromString(body);
+      let leftsiteBar = xpath.select('//*[@id="newsRegionJS"]', doc).toString();
+      let $ = sh.load(leftsiteBar);
+      resolve($('div').children('article').map(function(i, elem){
+        return ['http://www.kp.kg/online/news/' + $(this).attr('data-news-id') + '/'];
+      }).get());
+    });
+  });
 }
 
-starting().then(result=>{
-    console.log(result)
-    process.exit()
+
+async function startParser(){
+  try{
+    let list = await getUrlList();
+    let handler = new Handler(list, 'kp');
+    let url = await handler.getUrl();
+    if(url){
+      await send(url, 1145)
+    }
+    return true
+  }catch(e){
+    throw e
+  }
+}
+
+startParser().then(result=>{
+  process.exit();
 }).catch(e=>{
-    console.log(e)
-})
+  console.log(e)
+});

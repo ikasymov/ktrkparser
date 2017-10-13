@@ -10,6 +10,9 @@ let cron = require('node-cron');
 let async = require('async');
 let db = require('../models');
 
+let Handler = require('../handlerSteps');
+let send = require('../send');
+
 function AkchaParser(config, url){
     Parser.apply(this, arguments);
     this._url = url
@@ -89,6 +92,14 @@ AkchaParser.prototype.start = async function(){
     }
 };
 
+async function getUrlList(){
+  return new Promise((resolve, reject)=>{
+    x(config.parserUrl, '.col-md-6.content_news_list', ['.news_list_wrapper a@href'])((error, list)=>{
+      resolve(list)
+    })
+  });
+}
+
 
 async function getUrlsAndStartParser(){
     let list = await new Promise((resolve, reject)=>{
@@ -126,7 +137,21 @@ async function getUrlsAndStartParser(){
 
 }
 
-getUrlsAndStartParser().then(result=>{
+async function startParser(){
+  try{
+    let list = await getUrlList();
+    let handler = new Handler(list, 'akcha');
+    let url = await handler.getUrl();
+    if(url){
+      await send(url, 1168)
+    }
+    return true
+  }catch(e){
+    throw e
+  }
+}
+
+startParser().then(result=>{
     process.exit();
 }).catch(e=>{
     console.log(e)

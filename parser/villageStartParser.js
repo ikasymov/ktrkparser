@@ -6,7 +6,8 @@ let config = require('../config').village;
 let ch = require('cheerio');
 let Xray = require('x-ray');
     let x = Xray();
-
+let Handler = require('../handlerSteps');
+let send = require('../send')
 
 function VillageParser(config){
     RandomParser.apply(this, arguments);
@@ -74,11 +75,42 @@ VillageParser.prototype.getArticleImages = async function(){
   return false
 };
 
-function starting(){
-    let parser = new VillageParser(config);
-
-    parser.start().then(result=>{
-        process.exit()
+async function getUrlList(){
+  return new Promise((resolve, reject)=>{
+    x(config.parserUrl, '.posts-layout.posts-layout-with-news', ['.lastnews-block .post-item.post-item-news a@href'])
+    ((error, list)=>{
+      if(!error){
+        resolve(list);
+      }
+      reject(error)
     })
+  });
 }
-starting()
+
+async function startParser(){
+  try{
+    let list = await getUrlList();
+    let handler = new Handler(list, 'village');
+    let url = await handler.getUrl();
+    if(url){
+      await send(url, 1156)
+    }
+    return true
+  }catch(e){
+    throw e
+  }
+}
+
+startParser().then(result=>{
+  process.exit();
+}).catch(e=>{
+  console.log(e)
+});
+// function starting(){
+//     let parser = new VillageParser(config);
+//
+//     parser.start().then(result=>{
+//         process.exit()
+//     })
+// }
+// starting()

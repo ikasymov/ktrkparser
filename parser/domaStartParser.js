@@ -7,6 +7,8 @@ let xRay = require('x-ray'),
 let async = require('async');
 let ch = require('cheerio');
 let db = require('../models');
+let Handler = require('../handlerSteps');
+let send = require('../send');
 
 function DomaParser(config, url){
     Parser.apply(this, arguments);
@@ -106,38 +108,61 @@ DomaParser.prototype.start = async function(){
     }
 };
 
-
-async function startParser() {
-    let list = await new Promise((resolve, reject)=>{
-        x(config.parserUrl + 'retsepty', '.grid-two-column__column.grid-two-column__column_center.tags_content_pages_container',
-            ['.card-container .card .card__content .card__description  a@href'])((error, list)=>{
-                resolve(list)
-        })
+async function getUrlList(){
+    return new Promise((resolve, reject)=>{
+      x(config.parserUrl + 'retsepty', '.grid-two-column__column.grid-two-column__column_center.tags_content_pages_container',
+       ['.card-container .card .card__content .card__description  a@href'])((error, list)=>{
+        resolve(list)
+      })
     });
-    let reverseList = list.reverse();
-    let value = await db.Parser.findOrCreate({
-        where: {
-            key: config.dataName
-        },
-        defaults: {
-            key:config.dataName,
-            value: reverseList[0]
-        }
-    });
+}
 
-    let parseList = reverseList.slice(reverseList.indexOf(value[0].value) + 1);
-    if(parseList.length > 0){
-        for (let i in list){
-            let elem = list[i];
-            let parser = new DomaParser(config, elem);
-            let result = await parser.start();
-            console.log(result)
-        }
-        await value[0].update({value:parseList.slice(-1)[0]})
-        return 'OK'
-    }else{
-        return 'not list'
+
+// async function startParser() {
+//     let list = await new Promise((resolve, reject)=>{
+//         x(config.parserUrl + 'retsepty', '.grid-two-column__column.grid-two-column__column_center.tags_content_pages_container',
+//             ['.card-container .card .card__content .card__description  a@href'])((error, list)=>{
+//                 resolve(list)
+//         })
+//     });
+//     let reverseList = list.reverse();
+//     let value = await db.Parser.findOrCreate({
+//         where: {
+//             key: config.dataName
+//         },
+//         defaults: {
+//             key:config.dataName,
+//             value: reverseList[0]
+//         }
+//     });
+//
+//     let parseList = reverseList.slice(reverseList.indexOf(value[0].value) + 1);
+//     if(parseList.length > 0){
+//         for (let i in list){
+//             let elem = list[i];
+//             let parser = new DomaParser(config, elem);
+//             let result = await parser.start();
+//             console.log(result)
+//         }
+//         await value[0].update({value:parseList.slice(-1)[0]})
+//         return 'OK'
+//     }else{
+//         return 'not list'
+//     }
+// }
+
+async function startParser(){
+  try{
+    let list = await getUrlList();
+    let handler = new Handler(list, 'doma');
+    let url = await handler.getUrl();
+    if(url){
+      await send(url, 1165)
     }
+    return true
+  }catch(e){
+    throw e
+  }
 }
 
 

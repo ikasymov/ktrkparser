@@ -9,6 +9,8 @@ let config = require('../config').rbk;
 let Parser = require('../parser');
 let errors = require('../errors');
 let db = require('../models');
+let Handler = require('../handlerSteps');
+let send = require('../send')
 
 function RBCParser(config){
     Parser.apply(this, arguments);
@@ -166,9 +168,48 @@ RBCParser.prototype.getArticleBody = async function(){
     }
 };
 
+async function getUrlList(){
+  let parseUrl = config.parserUrl;
+  return new Promise(function (resolve, rejected) {
+    let data = {
+      url: parseUrl,
+      method: 'GET'
+    };
+    request(data, function(error, req, body){
+      if (error || req.statusCode === 404){
+        rejected(error || new errors.PageNotFound('RBC'));
+      }else{
+        let doc = new dom().parseFromString(body);
+        let leftSideBarHtml = xpath.select('/html/body/div[8]/div/div[2]/div[1]/div/div/div/div/div[2]/div', doc).toString();
+        let $ = sh.load(leftSideBarHtml);
+        let urls = $('a').map(function (i, elem) {
+          return [$(this).attr('href')];
+        }).get();
+        console.log(urls)
+        resolve(urls);
+      }
+    });
+  });
+}
 
 
-let parser = new RBCParser(config);
-parser.start().then(result=>{
-    process.exit();
-})
+
+async function startParser(){
+  try{
+    let list = await getUrlList();
+    let handler = new Handler(list, 'rbc');
+    let url = await handler.getUrl();
+    if(url){
+      await send(url, 1152)
+    }
+    return true
+  }catch(e){
+    throw e
+  }
+}
+
+startParser().then(result=>{
+  process.exit();
+}).catch(e=>{
+  console.log(e)
+});

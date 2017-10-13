@@ -6,6 +6,10 @@ let xRay = require('x-ray'),
     x = xRay();
 
 
+let Handler = require('../handlerSteps');
+let send = require('../send');
+
+
 function ForbesParser(config){
     RandomParser.apply(this, arguments);
 };
@@ -77,26 +81,57 @@ ForbesParser.prototype.getArticleImages = async function(){
     return [await this._saveImageByUrl(url)];
 };
 
-ForbesParser.prototype.start = async function(){
-  try{
-      let urls = await this._generateRandomUrl(config);
-      let html = await this._getHtmlForParse();
-      if(urls && html){
-          let resultCode = await this._sendArticle(this._randomUrl);
-          console.log(resultCode)
-      }else{
-          console.log('not random')
+// ForbesParser.prototype.start = async function(){
+//   try{
+//       let urls = await this._generateRandomUrl(config);
+//       let html = await this._getHtmlForParse();
+//       if(urls && html){
+//           let resultCode = await this._sendArticle(this._randomUrl);
+//           console.log(resultCode)
+//       }else{
+//           console.log('not random')
+//       }
+//   }catch(e){
+//       console.log(e.message)
+//   }
+// };
+//
+//
+//
+// let parser = new ForbesParser(config);
+// parser.start().then(result=>{
+//     process.exit()
+// }).catch(e=>{
+//     console.log(e)
+// })
+
+async function getUrlList(){
+  return new Promise((resolve, reject)=>{
+    x('http://www.forbes.ru/news', '.panel-pane.pane-page-content', ['.block-href-material.block-href-material-0.active .item-material .href-material@href'])((error, list)=>{
+      if(!error){
+        resolve(list.reverse());
       }
+      reject(error)
+    });
+  });
+}
+
+async function startParser(){
+  try{
+    let list = await getUrlList();
+    let handler = new Handler(list, 'forbes');
+    let url = await handler.getUrl();
+    if(url){
+      await send(url, 1158)
+    }
+    return true
   }catch(e){
-      console.log(e.message)
+    throw e
   }
-};
+}
 
-
-
-let parser = new ForbesParser(config);
-parser.start().then(result=>{
-    process.exit()
+startParser().then(result=>{
+  process.exit();
 }).catch(e=>{
-    console.log(e)
-})
+  console.log(e)
+});
