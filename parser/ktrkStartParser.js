@@ -207,7 +207,7 @@ async function getUrl(language, dataName){
         }
     });
     await value[0].update({value: list.join('|')});
-    return filterList
+    return filterList.slice(0, 1)
 
 };
 
